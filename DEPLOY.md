@@ -63,11 +63,17 @@ git push -u origin main      # 实际分支名可能是 master，按 git branch 
 所以必须先建表并把量表/题目写进去，否则提交会返回 400。
 
 在本机执行（一次性）：
+
+> ⚠️ **建表必须用 Neon 的「Direct（非 pooler）直连串」**（端口 5432，连接串里**不含** `-pooler` / `6543`）。
+> 池化串（Pooled，端口 6543）走 pgbouncer 事务池，`db push` 建表会卡住或报错；池化串只留给 **Vercel 运行时**的 `DATABASE_URL`。
+
 ```bash
-DATABASE_URL="<第 1 步的 Neon 连接串>" npm run db:postgres:provision
+DATABASE_URL="<Neon 直连串，Connection Details 里选 Direct，保留 ?sslmode=require>" npm run db:postgres:provision
 npm run db:generate      # 把本机 Prisma Client 切回 SQLite（不影响已部署的 Vercel）
 ```
 `provision` 会依次：派生 Postgres schema → 生成 Client → `db push` 建表 → 写入量表与题目（来自 `data/question-bank.json`）。
+
+> 若把池化串误用于建表，脚本会打印 ⚠️ 警告；此时换直连串重跑即可。
 
 ---
 
