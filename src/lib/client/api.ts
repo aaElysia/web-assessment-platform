@@ -5,7 +5,7 @@
 
 import type { Demographics } from "@/lib/client/storage";
 
-export type LikertOption = { value: number; label: string };
+export type LikertOption = { value: number; label: string; shortLabel?: string };
 
 export type PublicQuestionnaire = {
   likert: {

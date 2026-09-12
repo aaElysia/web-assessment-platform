@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClasses } from "@/components/ui/Button";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export default function HomePage() {
   return (
@@ -47,6 +48,20 @@ export default function HomePage() {
         本测评为教育 / 自我洞察用途，结果不具有诊断意义，不构成任何临床诊断、
         心理评估或医疗建议。你随时可以退出，且我们不收集任何可识别个人身份的信息。
       </Alert>
+
+      <section className="mt-6 text-center">
+        <p className="text-sm text-muted">
+          想告诉我们你的使用感受？
+          <a
+            href={SITE_CONFIG.feedbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-1 font-medium text-primary hover:underline"
+          >
+            {SITE_CONFIG.feedbackLabel}
+          </a>
+        </p>
+      </section>
     </Container>
   );
 }

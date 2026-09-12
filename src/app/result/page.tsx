@@ -7,7 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { buttonClasses } from "@/components/ui/Button";
+import { Button, buttonClasses } from "@/components/ui/Button";
 import { BigFiveRadar } from "@/components/charts/BigFiveRadar";
 import { AiDomainBar } from "@/components/charts/AiDomainBar";
 import { DomainBreakdown } from "@/components/result/DomainBreakdown";
@@ -15,7 +15,9 @@ import {
   fetchResult,
   type ResultResponse,
 } from "@/lib/client/api";
+import { SITE_CONFIG } from "@/lib/site-config";
 import {
+  buildSummary,
   dimensionColor,
   findScaleByType,
   formatCompletion,
@@ -43,6 +45,7 @@ function ResultInner() {
   const [data, setData] = useState<ResultResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async (id: string) => {
     setLoading(true);
@@ -60,6 +63,16 @@ function ResultInner() {
   useEffect(() => {
     if (pid) void load(pid);
   }, [pid, load]);
+
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   // ---- 未携带参与编号：给出明确下一步，而不是白屏 -------------------------
   if (!pid) {
@@ -131,6 +144,7 @@ function ResultInner() {
   const hasIncomplete = hasIncompleteDomains(result);
   const qualityFlags = result.qualityFlags ?? [];
   const shortId = data.participantId.slice(0, 8);
+  const summaryText = buildSummary(result);
 
   return (
     <Container>
@@ -184,6 +198,15 @@ function ResultInner() {
           {qualityFlags.includes("low_discrimination") ? "各题几乎不区分（选项高度集中）" : ""}
           的特征。这可能影响结果的区分度，本页结论仅供参考，不代表稳定的人格或态度画像。
         </Alert>
+      )}
+
+      {summaryText && (
+        <Card className="mt-6" title="你的倾向小结（仅供参考）">
+          <p className="text-sm leading-relaxed text-slate-700">{summaryText}</p>
+          <p className="mt-2 text-xs text-muted">
+            以上仅基于你作答的相对分带（高于 / 接近 / 低于量表中点）生成，属教育性自我洞察，不构成任何结论或诊断。
+          </p>
+        </Card>
       )}
 
       {/* ---- 大五人格 ---- */}
@@ -255,7 +278,30 @@ function ResultInner() {
         </ul>
       </Card>
 
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
+      {/* ---- 分享与反馈（P0-1 / P1-7） ---- */}
+      <Card className="mt-8" title="分享与反馈">
+        <p className="text-sm text-muted">
+          觉得有意思？把你的结果链接分享给朋友，或告诉我们你的使用感受。
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button variant="secondary" size="md" onClick={handleCopyLink}>
+            {copied ? "已复制 ✓" : "复制结果链接"}
+          </Button>
+          <a
+            href={SITE_CONFIG.feedbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonClasses("primary", "md")}
+          >
+            {SITE_CONFIG.feedbackLabel}
+          </a>
+        </div>
+        <p className="mt-3 text-xs text-muted">
+          反馈通过邮件 / 第三方问卷收集，不会与你的作答数据关联。
+        </p>
+      </Card>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link href="/consent" className={buttonClasses("secondary")}>
           重新测评
         </Link>

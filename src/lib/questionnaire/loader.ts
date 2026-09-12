@@ -35,7 +35,7 @@ export type BankScale = {
   };
 };
 
-export type LikertOption = { value: number; label: string };
+export type LikertOption = { value: number; label: string; shortLabel?: string };
 export type Likert = {
   scale: number;
   minLabel: string;

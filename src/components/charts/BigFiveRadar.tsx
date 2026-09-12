@@ -58,13 +58,20 @@ export function BigFiveRadar({ data }: { data: RadarPoint[] }) {
         </RadarChart>
       </ResponsiveContainer>
 
-      {/* 图例：颜色与维度一一对应，且标注「未计分」的维度。 */}
+      {/* 图例：颜色与维度一一对应；「未计分」维度用空心环标记以示区别（P1-5）。 */}
       <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
         {data.map((d) => (
           <li key={d.key} className="flex items-center gap-1.5 text-xs">
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: DIMENSION_COLORS[d.key] ?? "#64748b" }}
+              style={
+                d.missing
+                  ? {
+                      backgroundColor: "transparent",
+                      border: `2px solid ${DIMENSION_COLORS[d.key] ?? "#64748b"}`,
+                    }
+                  : { backgroundColor: DIMENSION_COLORS[d.key] ?? "#64748b" }
+              }
             />
             <span className="text-slate-600">
               {d.name}
@@ -73,6 +80,12 @@ export function BigFiveRadar({ data }: { data: RadarPoint[] }) {
           </li>
         ))}
       </ul>
+
+      {data.some((d) => d.missing) && (
+        <p className="mt-2 text-center text-xs text-muted">
+          未计分维度在图中落点仅为占位示意，不代表该维度水平极低；其真实分数因有效作答不足而未给出。
+        </p>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ResultDomain, ResultPayload, ResultScale } from "@/lib/client/api";
 import {
+  buildSummary,
   findScaleByType,
   formatCompletion,
   formatScore,
@@ -178,5 +179,106 @@ describe("view-model · 展示格式化", () => {
     expect(formatCompletion(1)).toBe("100%");
     expect(formatCompletion(0.5)).toBe("50%");
     expect(formatCompletion(null)).toBe("—");
+  });
+});
+
+describe("view-model · 中性个性化小结（P1-6）", () => {
+  function d(
+    key: string,
+    name: string,
+    band: "high" | "medium" | "low" | null,
+    score: number | null = 3
+  ): ResultDomain {
+    return {
+      key,
+      name,
+      polarity: key === "CN" ? "higher = more concern" : undefined,
+      score,
+      answered: score === null ? 2 : 8,
+      total: 8,
+      missing: score === null ? 6 : 0,
+      imputed: false,
+      incomplete: score === null,
+      band:
+        band === null
+          ? null
+          : {
+              label: band === "high" ? "高于中点" : band === "medium" ? "接近中点" : "低于中点",
+              tone: band,
+            },
+      interpretation: null,
+    };
+  }
+
+  const personality: ResultScale = {
+    scaleKey: "big_five",
+    scaleName: "大五人格",
+    type: "personality",
+    domains: [
+      d("O", "开放性", "high", 4.2),
+      d("C", "尽责性", "high", 4.0),
+      d("E", "外向性", "low", 2.1),
+      d("A", "宜人性", "medium", 3.0),
+      d("N", "神经质", "low", 2.8),
+    ],
+    composite: null,
+  };
+
+  const attitude: ResultScale = {
+    scaleKey: "ai_adoption",
+    scaleName: "AI 技术采纳态度",
+    type: "attitude",
+    domains: [],
+    composite: {
+      key: "ai_adoption_index",
+      label: "AI 采纳态度探索性指数",
+      formula: "mean",
+      score: 3.6,
+      band: { label: "高于中点", tone: "high" },
+      interpretation: null,
+    },
+  };
+
+  const p: ResultPayload = {
+    scales: [personality, attitude],
+    answeredTotal: 60,
+    itemTotal: 60,
+    completionRate: 1,
+    qualityFlags: [],
+  };
+
+  it("仅用分带标签生成小结，且不含诊断性措辞", () => {
+    const text = buildSummary(p) ?? "";
+    expect(text).toContain("开放性");
+    expect(text).toContain("外向性");
+    expect(text).toContain("高于中点");
+    expect(text).toContain("低于中点");
+    expect(text).toContain("探索性指数");
+    expect(text).not.toMatch(/你属于|你患有|你是一个|诊断|患有/);
+  });
+
+  it("所有维度接近中点时给出中性兜底句", () => {
+    const flat: ResultScale = {
+      ...personality,
+      domains: personality.domains.map((x) => ({ ...x, band: { label: "接近中点", tone: "medium" } })),
+    };
+    const text = buildSummary({ ...p, scales: [flat, attitude] }) ?? "";
+    expect(text).toContain("均接近量表中点");
+  });
+
+  it("未计分（incomplete）维度不计入小结", () => {
+    const broken: ResultScale = {
+      ...personality,
+      domains: personality.domains.map((x) =>
+        x.key === "N" ? { ...x, score: null, incomplete: true, band: null } : x
+      ),
+    };
+    const text = buildSummary({ ...p, scales: [broken, attitude] }) ?? "";
+    expect(text).toContain("开放性");
+    expect(text).not.toContain("神经质");
+  });
+
+  it("无数据返回 null", () => {
+    expect(buildSummary(null)).toBeNull();
   });
 });

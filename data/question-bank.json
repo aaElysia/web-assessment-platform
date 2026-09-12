@@ -9,11 +9,11 @@
       "minLabel": "非常不符合",
       "maxLabel": "非常符合",
       "options": [
-        { "value": 1, "label": "非常不符合" },
-        { "value": 2, "label": "比较不符合" },
-        { "value": 3, "label": "中立" },
-        { "value": 4, "label": "比较符合" },
-        { "value": 5, "label": "非常符合" }
+        { "value": 1, "label": "非常不符合", "shortLabel": "很不符" },
+        { "value": 2, "label": "比较不符合", "shortLabel": "不太" },
+        { "value": 3, "label": "中立", "shortLabel": "中立" },
+        { "value": 4, "label": "比较符合", "shortLabel": "比较" },
+        { "value": 5, "label": "非常符合", "shortLabel": "很符合" }
       ]
     },
     "scoring": {

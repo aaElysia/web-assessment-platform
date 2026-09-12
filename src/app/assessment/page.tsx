@@ -30,12 +30,14 @@ function QuestionCard({
   index,
   item,
   labels,
+  shortLabels,
   value,
   onChange,
 }: {
   index: number;
   item: QA;
   labels: string[];
+  shortLabels: string[];
   value: number | undefined;
   onChange: (v: number) => void;
 }) {
@@ -51,6 +53,7 @@ function QuestionCard({
             <LikertScale
               name={item.text}
               labels={labels}
+              shortLabels={shortLabels}
               value={value}
               onChange={onChange}
             />
@@ -78,6 +81,16 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedNotice, setSavedNotice] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // 滚动超过一屏后显示「回到顶部」悬浮按钮（P2-8）。
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const participantId = getParticipantId();
@@ -110,6 +123,13 @@ export default function AssessmentPage() {
 
   const likertLabels = useMemo(
     () => (data ? data.likert.options.map((o) => o.label) : []),
+    [data]
+  );
+  const likertShortLabels = useMemo(
+    () =>
+      data
+        ? data.likert.options.map((o) => o.shortLabel ?? o.label)
+        : [],
     [data]
   );
 
@@ -183,6 +203,14 @@ export default function AssessmentPage() {
     }
   }
 
+  // 保存并稍后继续：显式持久化草稿、回到顶部、给出「已保存」反馈（P1-4）。
+  function handleSaveAndExit() {
+    persist(answers, demographics);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 2500);
+  }
+
   if (loading) {
     return (
       <Container>
@@ -209,7 +237,24 @@ export default function AssessmentPage() {
   return (
     <Container>
       <div className="sticky top-0 z-10 -mx-4 mb-6 bg-white/90 px-4 py-3 backdrop-blur">
-        <ProgressBar value={progress} label={`作答进度 ${answered} / ${total}`} />
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <ProgressBar value={progress} label={`作答进度 ${answered} / ${total}`} />
+          </div>
+          {allAnswered && (
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("submit-area")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="shrink-0 text-sm font-medium text-primary hover:underline"
+            >
+              去提交 ↓
+            </button>
+          )}
+        </div>
       </div>
 
       {questions.map((q, idx) => {
@@ -224,6 +269,7 @@ export default function AssessmentPage() {
               index={q.index}
               item={q.item}
               labels={likertLabels}
+              shortLabels={likertShortLabels}
               value={answers[q.item.code]}
               onChange={(v) => handleAnswer(q.item.code, v)}
             />
@@ -283,7 +329,10 @@ export default function AssessmentPage() {
         </div>
       </Card>
 
-      <div className="mt-6 rounded-2xl border border-line bg-white p-4">
+      <div
+        id="submit-area"
+        className="mt-6 rounded-2xl border border-line bg-white p-4"
+      >
         {error && (
           <Alert tone="danger" className="mb-3">
             {error}
@@ -293,6 +342,14 @@ export default function AssessmentPage() {
           <span className="text-sm text-muted">
             草稿已自动保存在本设备，刷新或关闭页面后可继续作答。
           </span>
+          {savedNotice && (
+            <span className="text-sm font-medium text-emerald-600">已保存 ✓</span>
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-end gap-3">
+          <Button variant="ghost" size="md" onClick={handleSaveAndExit}>
+            保存并稍后继续
+          </Button>
           <Button
             variant="primary"
             size="lg"
@@ -307,6 +364,17 @@ export default function AssessmentPage() {
           </Button>
         </div>
       </div>
+
+      {showBackToTop && (
+        <button
+          type="button"
+          aria-label="回到顶部"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/80 text-lg text-white shadow-lg transition-colors hover:bg-slate-900"
+        >
+          ↑
+        </button>
+      )}
     </Container>
   );
 }

@@ -115,3 +115,54 @@ export function formatCompletion(rate: number | null | undefined): string {
   if (rate === null || rate === undefined || !Number.isFinite(rate)) return "—";
   return `${Math.round(rate * 100)}%`;
 }
+
+/**
+ * 生成仅基于分带标签的中性个性化小结（UX 审查 P1-6）。
+ *
+ * 严格约束（避免心理诊断语言）：
+ *  - 只用「维度名 + 分带标签（高于中点 / 接近中点 / 低于中点）」；
+ *  - 绝不出现「你属于 / 你患有 / 你是一个…」等定性诊断措辞；
+ *  - 仅作教育性自我洞察的参考，不构成结论。
+ * 缺失（incomplete）维度不计入小结，以免用占位值误导。
+ */
+export function buildSummary(payload: ResultPayload | null): string | null {
+  if (!payload) return null;
+  const parts: string[] = [];
+
+  const bigFive = payload.scales.find((s) => s.type === "personality");
+  if (bigFive) {
+    const scored = bigFive.domains.filter(
+      (d) => d.score !== null && d.band !== null
+    );
+    const high = scored
+      .filter((d) => d.band?.tone === "high")
+      .map((d) => d.name);
+    const low = scored
+      .filter((d) => d.band?.tone === "low")
+      .map((d) => d.name);
+
+    if (high.length || low.length) {
+      const segs: string[] = [];
+      if (high.length) segs.push(`相对突出的是 ${high.join("、")}（高于中点）`);
+      if (low.length) segs.push(`相对不突出的是 ${low.join("、")}（低于中点）`);
+      parts.push(`大五人格方面，你的${segs.join("；")}。`);
+    } else {
+      parts.push("大五人格方面，你的各维度均接近量表中点。");
+    }
+  }
+
+  const ai = payload.scales.find((s) => s.type === "attitude");
+  if (ai?.composite?.band) {
+    const toneText =
+      ai.composite.band.tone === "high"
+        ? "偏积极"
+        : ai.composite.band.tone === "low"
+          ? "偏保守"
+          : "居中";
+    parts.push(
+      `AI 采纳态度探索性指数为 ${formatScore(ai.composite.score)}（${ai.composite.band.label}），整体态度${toneText}。`
+    );
+  }
+
+  return parts.length ? parts.join("") : null;
+}
