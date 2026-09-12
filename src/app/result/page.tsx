@@ -129,6 +129,7 @@ function ResultInner() {
   const barData = toBarData(aiScale);
   const aiComposite = aiScale?.composite ?? null;
   const hasIncomplete = hasIncompleteDomains(result);
+  const qualityFlags = result.qualityFlags ?? [];
   const shortId = data.participantId.slice(0, 8);
 
   return (
@@ -173,6 +174,18 @@ function ResultInner() {
         </Alert>
       )}
 
+      {qualityFlags.length > 0 && (
+        <Alert tone="warning" className="mt-4">
+          作答质量提示：本次作答呈现出
+          {qualityFlags.includes("straightlining") ? "某一选项占比极高（疑似连续勾选同一项）" : ""}
+          {qualityFlags.includes("straightlining") && qualityFlags.includes("low_discrimination")
+            ? "，且"
+            : ""}
+          {qualityFlags.includes("low_discrimination") ? "各题几乎不区分（选项高度集中）" : ""}
+          的特征。这可能影响结果的区分度，本页结论仅供参考，不代表稳定的人格或态度画像。
+        </Alert>
+      )}
+
       {/* ---- 大五人格 ---- */}
       <Card
         className="mt-6"
@@ -209,7 +222,9 @@ function ResultInner() {
               </span>
             </div>
             <p className="mt-2 text-xs text-muted">
-              计算方式：{aiComposite.formula}（等权，未经实证加权；「担忧」项已翻正，故越高表示采纳态度越积极）
+              计算方式：{aiComposite.formula}（五个维度等权、各占 1/5；「担忧」已翻正）。
+              这是一个把五个维度合成在一起的<strong className="font-medium text-slate-600">探索性、实验性</strong>指数，
+              仅作补充参考，不代表一个已被验证的单维构念；「对 AI 的担忧」已在上方作为独立维度单独呈现。
             </p>
             {aiComposite.interpretation && (
               <p className="mt-2 text-xs leading-relaxed text-slate-600">

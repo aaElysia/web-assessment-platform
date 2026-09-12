@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getScales } from "@/lib/questionnaire/loader";
 import {
   computeAiAdoptionIndex,
+  detectResponseQuality,
   interpretBand,
   reverseRecode,
   scoreAll,
@@ -96,8 +97,8 @@ describe("scoreAll —— 已知答案校验（误差 < 1e-6）", () => {
       expect(Math.abs((domain(r, "ai_adoption", key).score as number) - 3)).toBeLessThan(1e-6);
     }
     expect(Math.abs((domain(r, "ai_adoption", "CN").score as number) - 4)).toBeLessThan(1e-6);
-    // 合成指数 = (mean(PU,TR,WA,LA)=3 + (6 - 4)) / 2 = 2.5
-    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 2.5)).toBeLessThan(1e-6);
+    // 合成指数（平衡等权）= (3·4 + (6 - 4)) / 5 = (12 + 2) / 5 = 2.8
+    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 2.8)).toBeLessThan(1e-6);
   });
 
   it("全 1 分 → Big Five 同样回到 3.0（对称性）", () => {
@@ -114,18 +115,19 @@ describe("scoreAll —— 已知答案校验（误差 < 1e-6）", () => {
         expect(Math.abs((d.score as number) - 5)).toBeLessThan(1e-6);
       }
     }
-    // CN 达到最大担忧 5；合成指数 = (5 + (6-5))/2 = 3.0（担忧抵消了正向态度）
-    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 3)).toBeLessThan(1e-6);
+    // CN 达到最大担忧 5（翻正后 1）；合成指数 = (5·4 + (6-5)) / 5 = 4.2
+    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 4.2)).toBeLessThan(1e-6);
   });
 
-  it("反向一致作答（正向 1 / 反向 5）→ 所有维度分 = 1.0，合成指数 = 3.0", () => {
+  it("反向一致作答（正向 1 / 反向 5）→ 所有维度分 = 1.0，合成指数 = 1.8", () => {
     const r = scoreAll(aligned(1, 5));
     for (const s of r.scales) {
       for (const d of s.domains) {
         expect(Math.abs((d.score as number) - 1)).toBeLessThan(1e-6);
       }
     }
-    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 3)).toBeLessThan(1e-6);
+    // 合成指数 = (1·4 + (6-1)) / 5 = (4 + 5) / 5 = 1.8
+    expect(Math.abs((scaleOf(r, "ai_adoption").composite!.score as number) - 1.8)).toBeLessThan(1e-6);
   });
 });
 
@@ -247,14 +249,23 @@ describe("完成度统计", () => {
   });
 });
 
-describe("interpretBand（启发式分带）", () => {
-  it("按框架文档阈值分带", () => {
+describe("interpretBand（启发式分带 · 量表中点相对）", () => {
+  it("按阈值分带（tone 不变）", () => {
     expect(interpretBand(1.0)?.tone).toBe("low");
     expect(interpretBand(2.5)?.tone).toBe("low");
     expect(interpretBand(2.51)?.tone).toBe("medium");
     expect(interpretBand(3.49)?.tone).toBe("medium");
     expect(interpretBand(3.5)?.tone).toBe("high");
     expect(interpretBand(5)?.tone).toBe("high");
+  });
+
+  it("标签明确为「量表中点相对」而非人群比较（审查报告 P1）", () => {
+    expect(interpretBand(1.0)?.label).toBe("低于中点");
+    expect(interpretBand(2.5)?.label).toBe("低于中点");
+    expect(interpretBand(3.0)?.label).toBe("接近中点");
+    expect(interpretBand(3.49)?.label).toBe("接近中点");
+    expect(interpretBand(3.5)?.label).toBe("高于中点");
+    expect(interpretBand(5)?.label).toBe("高于中点");
   });
 
   it("null / 非有限值 → null", () => {
@@ -270,6 +281,62 @@ describe("interpretBand（启发式分带）", () => {
         expect(d.band).not.toBeNull();
       }
     }
+  });
+});
+
+describe("detectResponseQuality（作答质量粗筛 · 审查报告 P4）", () => {
+  it("全同值作答 → 命中 straightlining + low_discrimination", () => {
+    const codes = new Set(allItems().map((i) => i.id));
+    const { flags } = detectResponseQuality(uniform(3), codes);
+    expect(flags).toContain("straightlining");
+    expect(flags).toContain("low_discrimination");
+  });
+
+  it("真实区分作答（全部给 1 与 5 交替）→ 不触发任何标记", () => {
+    const codes = new Set(allItems().map((i) => i.id));
+    const varied: Answers = {};
+    let toggle = 1;
+    for (const it of allItems()) {
+      varied[it.id] = toggle;
+      toggle = toggle === 1 ? 5 : 1;
+    }
+    const { flags } = detectResponseQuality(varied, codes);
+    expect(flags).toEqual([]);
+  });
+
+  it("仅 2 题且取值不同 → 不误触发标记", () => {
+    const codes = new Set(allItems().map((i) => i.id));
+    const sparse: Answers = { O1: 1, O2: 5 };
+    const { flags } = detectResponseQuality(sparse, codes);
+    expect(flags).toEqual([]);
+  });
+
+  it("scoreAll 把 flags 写入 qualityFlags（全 3 分作答触发）", () => {
+    const r = scoreAll(uniform(3));
+    expect(r.qualityFlags).toContain("straightlining");
+  });
+
+  it("scoreAll 对区分作答给出空 flags", () => {
+    const codes = allItems();
+    const varied: Answers = {};
+    let toggle = 1;
+    for (const it of codes) {
+      varied[it.id] = toggle;
+      toggle = toggle === 1 ? 5 : 1;
+    }
+    const r = scoreAll(varied);
+    expect(r.qualityFlags).toEqual([]);
+  });
+});
+
+describe("AI 合成指数 · 各域等权（审查报告 P2/P3）", () => {
+  it("五个域（CN 翻正）等权：仅 CN 变化时，CN 对指数的影响与任一正向域一致", () => {
+    // PU/TR/WA/LA 均 3、CN 3（翻正后 3）→ 指数 = 3
+    expect(Math.abs((computeAiAdoptionIndex({ PU: 3, TR: 3, WA: 3, LA: 3, CN: 3 }) as number) - 3)).toBeLessThan(1e-6);
+    // 把 CN 从 3 提到 4（更担忧 → 翻正后 2），指数下降 0.2（= 1/5 × 1）
+    expect(Math.abs((computeAiAdoptionIndex({ PU: 3, TR: 3, WA: 3, LA: 3, CN: 4 }) as number) - 2.8)).toBeLessThan(1e-6);
+    // 把 PU 从 3 提到 4（更积极），指数同样上升 0.2（= 1/5 × 1），证明等权
+    expect(Math.abs((computeAiAdoptionIndex({ PU: 4, TR: 3, WA: 3, LA: 3, CN: 3 }) as number) - 3.2)).toBeLessThan(1e-6);
   });
 });
 

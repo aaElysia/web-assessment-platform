@@ -34,7 +34,7 @@
         { "key": "C", "name": "尽责性 Conscientiousness", "itemIds": ["C1","C2","C3","C4","C5","C6","C7","C8"] },
         { "key": "E", "name": "外向性 Extraversion", "itemIds": ["E1","E2","E3","E4","E5","E6","E7","E8"] },
         { "key": "A", "name": "宜人性 Agreeableness", "itemIds": ["A1","A2","A3","A4","A5","A6","A7","A8"] },
-        { "key": "N", "name": "情绪敏感性 Neuroticism", "itemIds": ["N1","N2","N3","N4","N5","N6","N7","N8"] }
+        { "key": "N", "name": "神经质 Neuroticism", "itemIds": ["N1","N2","N3","N4","N5","N6","N7","N8"] }
       ],
       "items": [
         { "id": "O1", "domain": "O", "reverse": false, "text": "我对新的想法和概念充满好奇。" },
@@ -97,10 +97,10 @@
       ],
       "composite": {
         "key": "ai_adoption_index",
-        "label": "AI 采纳态度合成指数（等权）",
-        "formula": "( mean(PU, TR, WA, LA) + (6 - mean(CN)) ) / 2",
+        "label": "AI 采纳态度探索性指数（实验性）",
+        "formula": "( mean(PU, TR, WA, LA) + (6 - mean(CN)) ) / 5",
         "range": "1-5, higher = more favorable adoption attitude",
-        "weighting": "equal weight (documented; no unvalidated weighting claimed)"
+        "weighting": "equal weight per domain (5 domains, each 0.2; CN reverse-coded); exploratory / surface-validity only, not a validated construct"
       },
       "items": [
         { "id": "PU1", "domain": "PU", "reverse": false, "text": "我认为 AI 工具能提高我的工作与学习效率。" },

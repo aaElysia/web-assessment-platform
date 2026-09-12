@@ -109,6 +109,8 @@ export type ResultPayload = {
   answeredTotal: number;
   itemTotal: number;
   completionRate: number;
+  /** 作答质量粗筛标记（见服务端 detectResponseQuality）。 */
+  qualityFlags: string[];
 };
 
 export type ResultResponse = {

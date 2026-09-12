@@ -69,6 +69,7 @@ export async function GET(
   // 文案来源 data/interpretations.json（配置驱动），未配置时返回 null 而非临时编造。
   const enriched = {
     ...result,
+    qualityFlags: result.qualityFlags ?? [],
     scales: result.scales.map((s) => ({
       ...s,
       domains: s.domains.map((d) => ({
@@ -95,10 +96,18 @@ export async function GET(
     result: enriched,
     // 结果页/导出必须原样展示的边界说明，避免被解读为临床结论。
     interpretationNotes: [
-      "分带（相对偏低 / 中等 / 相对偏高）为启发式参考，本平台尚未建立常模，不代表人群百分位。",
+      "分带（低于中点 / 接近中点 / 高于中点）是相对「量表中点 3.0」的启发式参考，本平台尚未建立常模，不代表人群百分位，也不表示你高于或低于大多数人。",
       "结果仅用于教育性自我洞察，不构成任何临床诊断、心理评估或医疗建议。",
       "若某维度显示 incomplete，说明该维度有效作答不足，未给出分数（不会用估计值替代）。",
-      "AI 态度量表中「对 AI 的担忧」为反向语义维度：数值越高表示担忧越多，并非越积极。",
+      "AI 态度量表中「对 AI 的担忧」为独立维度、反向语义：数值越高表示担忧越多，并非越积极；本页的「AI 采纳态度探索性指数」仅为补充性参考，是把五个维度等权合成的实验性指数，非已验证构念。",
+      "完成度反映「已答题目占比」，不保证每个维度都已计分；若某维度显示「未计分」，请以该维度状态为准，不要据此整体下结论。",
+      "本平台未设置注意力检测 / 一致性筛查题项，结果未对作答质量做过滤；若你作答时较为随意，结果可能不具参考性。",
+      ...(result.qualityFlags.includes("straightlining")
+        ? ["本次作答中某一选项占比极高（疑似连续勾选同一项），结果仅供参考。"]
+        : []),
+      ...(result.qualityFlags.includes("low_discrimination")
+        ? ["本次作答各题几乎不区分（选项高度集中），结果的区分度可能不足，仅供参考。"]
+        : []),
     ],
     interpretationConfig: {
       version: getInterpretations().version,

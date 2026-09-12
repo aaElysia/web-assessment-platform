@@ -71,6 +71,11 @@ export type ScoreResult = {
   itemTotal: number;
   /** 0–1，作答完成度。 */
   completionRate: number;
+  /**
+   * 作答质量粗筛标记（见 detectResponseQuality）。
+   * 仅作提示、不参与计分、也不阻断结果；空数组表示未触发任何可疑模式。
+   */
+  qualityFlags: string[];
 };
 
 /** 反向重编码：5 点制下 recoded = 6 - value。 */
@@ -79,14 +84,69 @@ export function reverseRecode(value: number, likertScale = 5): number {
 }
 
 /**
- * 启发式分带（非常模）。阈值来自框架文档第 1.5 节：
- * ≤ 2.5 相对偏低；2.5–3.5 中等；≥ 3.5 相对偏高。
+ * 启发式分带（非常模、量表中点相对）。
+ *
+ * 阈值是相对于**量表中点 3.0** 的启发式切割，不是人群百分位：
+ *   ≤ 2.5 → 低于中点；2.5–3.5 → 接近中点；≥ 3.5 → 高于中点。
+ *
+ * 本平台尚未建立参照人群常模，任何"高/低"均应理解为"相对本量表中点"，
+ * 不得解读为"高于/低于大多数人"。标签刻意使用"中点"而非"相对"，以免
+ * 被误读为与他人的比较（详见审查报告 P1）。
  */
 export function interpretBand(score: number | null): Interpretation | null {
   if (score === null || !Number.isFinite(score)) return null;
-  if (score <= 2.5) return { label: "相对偏低", tone: "low" };
-  if (score < 3.5) return { label: "中等", tone: "medium" };
-  return { label: "相对偏高", tone: "high" };
+  if (score <= 2.5) return { label: "低于中点", tone: "low" };
+  if (score < 3.5) return { label: "接近中点", tone: "medium" };
+  return { label: "高于中点", tone: "high" };
+}
+
+/**
+ * 作答质量粗筛（无注意力/测谎题前提下的轻量防护，见审查报告 P4）。
+ *
+ * 本平台未设置专门的注意力检测题 / 一致性题 / 测谎题，故这里用「作答模式」
+ * 做最轻量的可疑标记。它**只作提示、不参与计分、也不阻断结果**——
+ * 真正的质控仍应靠题项设计与后续人工复核。
+ *
+ * 两个保守信号：
+ *  1. straightlining：某一单一选项覆盖了绝大多数有效作答（默认 ≥ 90%），
+ *     代表未认真区分题目、连续勾选同一项；
+ *  2. low_discrimination：全部有效作答的离散程度极低（等距假设下标准差 < 0.25），
+ *     代表几乎不区分题目。
+ *
+ * 注意：这两个信号在"真诚但高度一致的作答"下也可能触发，因此输出的是
+ * 「标记」而非「判定」，由上层决定是否提示。
+ */
+export function detectResponseQuality(
+  answers: Answers,
+  validCodes: Set<string>,
+  opts: { straightlineRatio?: number; minStdDev?: number } = {}
+): { flags: string[] } {
+  const ratio = opts.straightlineRatio ?? 0.9;
+  const minStd = opts.minStdDev ?? 0.25;
+
+  const values: number[] = [];
+  for (const code of validCodes) {
+    const v = answers[code];
+    if (v !== undefined && v !== null && Number.isFinite(v)) values.push(v);
+  }
+  if (values.length < 2) return { flags: [] };
+
+  const flags: string[] = [];
+
+  // 1) straightlining：众数占比
+  const freq = new Map<number, number>();
+  for (const v of values) freq.set(v, (freq.get(v) ?? 0) + 1);
+  const maxFreq = Math.max(...freq.values());
+  if (maxFreq / values.length >= ratio) flags.push("straightlining");
+
+  // 2) low_discrimination：标准差（等距假设）
+  const m = mean(values);
+  let acc = 0;
+  for (const v of values) acc += (v - m) ** 2;
+  const sd = Math.sqrt(acc / values.length);
+  if (sd < minStd) flags.push("low_discrimination");
+
+  return { flags };
 }
 
 type ItemMeta = Record<string, { reverse: boolean }>;
@@ -153,8 +213,15 @@ export function scoreDomain(
 }
 
 /**
- * AI 采纳态度合成指数（等权，已在题库 composite 中声明）。
- * `AI_Adoption_Index = ( mean(PU, TR, WA, LA) + ((scale+1) - mean(CN)) ) / 2`
+ * AI 采纳态度「探索性」指数（等权合成，仅表面效度，非已验证构念）。
+ *
+ * 设计取舍（见审查报告 P2 / P3）：
+ *  - CN（对 AI 的担忧）在本平台**作为独立维度**报告（结果页已有 CN 柱与解读），
+ *    本指数仅作「补充性的整体倾向」参考，不代表一个已被验证的单维构念；
+ *  - **各域等权**：五个域（PU/TR/WA/LA 与翻正后的 CN）各占 1/5，
+ *    避免旧公式把 CN 实际加权到约 4 倍于其它任一正向域；
+ *  - 公式：`( mean(PU,TR,WA,LA) + ((scale+1) - mean(CN)) ) / 5`
+ *    （即五个域分数（CN 已翻正）的算术平均，范围 1–5，每域权重 0.2）。
  * 任一分维度不可用 → 返回 null（不猜测、不部分合成）。
  */
 export function computeAiAdoptionIndex(
@@ -162,16 +229,15 @@ export function computeAiAdoptionIndex(
   likertScale = 5
 ): number | null {
   const positiveKeys = ["PU", "TR", "WA", "LA"];
-  for (const k of positiveKeys) {
+  const allKeys = [...positiveKeys, "CN"];
+  for (const k of allKeys) {
     if (domainScores[k] === null || domainScores[k] === undefined) return null;
   }
-  const concern = domainScores["CN"];
-  if (concern === null || concern === undefined) return null;
-
-  const positiveAvg = mean(positiveKeys.map((k) => domainScores[k] as number));
+  const favorable = positiveKeys.map((k) => domainScores[k] as number);
+  const concern = domainScores["CN"] as number;
   // 注意：此处是对「CN 维度分」的第二次、也是唯一一次反转（域级）。
   const favorableConcern = likertScale + 1 - concern;
-  return round((positiveAvg + favorableConcern) / 2, 4);
+  return round(mean([...favorable, favorableConcern]), 4);
 }
 
 /** 单量表评分。 */
@@ -227,10 +293,14 @@ export function scoreAll(answers: Answers): ScoreResult {
     validCodes.has(k)
   ).length;
 
+  // 作答质量粗筛：传全部有效题码，命中则为可疑模式（仅提示、不计分）。
+  const quality = detectResponseQuality(answers, validCodes);
+
   return {
     scales: scaleScores,
     answeredTotal,
     itemTotal,
     completionRate: itemTotal === 0 ? 0 : round(answeredTotal / itemTotal, 4),
+    qualityFlags: quality.flags,
   };
 }
