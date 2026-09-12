@@ -134,6 +134,18 @@ function requirePostgresUrl() {
     );
     process.exit(1);
   }
+  // Neon 池化串（pooler / 端口 6543）走 pgbouncer 事务池，prisma db push / migrate
+  // 依赖会话级 SET 语句，用池化串建表会卡住或报 "prepared statement" 类错误。
+  // 建表/迁移必须用直连串（非 pooler，端口 5432）。池化串只留给线上运行时。
+  if (/pooler/i.test(url) || /:6543\//.test(url)) {
+    console.warn(
+      "\n⚠️ 警告：检测到 Neon 池化连接串（pooler / 端口 6543）。\n" +
+        "   本命令要做 `db push` 建表，建议改用 Neon 的 **Direct（非 pooler）** 直连串，\n" +
+        "   否则可能因 pgbouncer 事务池导致建表失败。\n" +
+        "   线上运行时（Vercel 的 DATABASE_URL）才使用池化串。\n" +
+        "   （仍要继续也可，但建表若失败请换直连串重试。）"
+    );
+  }
   console.log(`目标数据库：${redactDbUrl(url)}（来源：${from}）`);
   return url;
 }
