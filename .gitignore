@@ -1,0 +1,37 @@
+node_modules
+.next
+*.log
+*.db
+*.db-journal
+*.tsbuildinfo
+
+# ---------------------------------------------------------------------------
+# 机密文件：一律不入库。只放行不含真实值的 .env.example。
+# 注意 `.env.production` / `.env.development` 这类**不带 .local** 的文件
+# 默认也会被 git 跟踪，因此这里用 `.env*` 全量忽略再单独放行示例文件。
+# ---------------------------------------------------------------------------
+.env*
+!.env.example
+
+# 生产密钥集中放在 .secrets/（目录整体忽略）。
+# 为什么不用 `.env.production.local`：Next.js 在 NODE_ENV=production 时会**自动加载**
+# 该文件，且优先级高于 `.env` —— 于是本地 `npm start` 预览会被生产占位连接串覆盖，
+# 连不上本地 SQLite。放在子目录里 Next 不会加载，本地与生产的凭据彻底隔离。
+.secrets/
+
+# 凭据 / 证书 / 平台配置
+*.pem
+*.key
+*.p12
+*.pfx
+.vercel
+.credentials.json
+
+# Postgres schema 由 scripts/prisma-postgres.mjs 从 schema.prisma 生成，不入库
+prisma/schema.generated.*.prisma
+
+# 排查/探测产生的临时产物（无头浏览器 profile、dump 出来的 DOM、题库备份等）
+.probe*
+
+# 交叉验证产出的对账表（每次运行都会重新生成）
+verify-output/

@@ -1,0 +1,88 @@
+// Prisma schema — Web 心理测评平台
+// 本地开发使用 SQLite；生产切换为 PostgreSQL（Neon）时，仅需把 provider 改为
+// "postgresql" 并更换 DATABASE_URL，模型无需改动（已避免使用 SQLite 不支持的特性）。
+
+generator client {
+  provider      = "prisma-client-js"
+  // 同时要兼容两处运行环境：
+  //   - 本地 Windows/macOS 开发（native = 当前平台引擎）
+  //   - Vercel 的无服务器运行时（glibc + OpenSSL 3，对应 rhel/debian 目标）
+  // 缺了 Vercel 目标，部署后会出现 "Prisma Query Engine not found" 运行期崩溃。
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 量表元数据：big_five / ai_adoption
+model Scale {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  type        String   // "personality" | "attitude"
+  description String?
+  createdAt   DateTime @default(now())
+  items       Item[]
+}
+
+/// 单题。reverse 标记反向计分题；domain 归属维度（O/C/E/A/N 或 PU/TR/WA/LA/CN）。
+model Item {
+  id         String   @id @default(cuid())
+  scaleId    String
+  scale      Scale    @relation(fields: [scaleId], references: [id], onDelete: Cascade)
+  code       String   // 例如 "O1"
+  text       String
+  orderIndex Int
+  reverse    Boolean  @default(false)
+  domain     String   // 例如 "O"、"PU"
+  options    String?  // Likert 选项 JSON 字符串
+  createdAt  DateTime @default(now())
+
+  responses  ResponseItem[]
+
+  @@unique([scaleId, code])
+  @@index([scaleId])
+}
+
+/// 匿名参与者。不绑定任何 PII；人口学为可选粗粒度分桶且默认 NULL。
+model Participant {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  consentVersion String?
+  consentAt      DateTime?
+  status         String   @default("created") // created | consented | completed | abandoned
+  ageRange       String?
+  gender         String?
+  education      String?
+  sessions       ResponseSession[]
+}
+
+/// 一次完整作答会话；支持断点续答，未完成标 incomplete。
+model ResponseSession {
+  id          String   @id @default(cuid())
+  participantId String
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  status      String   @default("in_progress") // in_progress | completed | abandoned
+  items       ResponseItem[]
+
+  @@index([participantId])
+}
+
+/// 单题作答值（1–5）。
+model ResponseItem {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ResponseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  value     Int      // 1..5
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, itemId])
+  @@index([itemId])
+  @@index([sessionId])
+}

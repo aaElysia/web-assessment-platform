@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   设计令牌（Design Tokens）
+   颜色以 "R G B" 形式存于 CSS 变量，配合 Tailwind 的
+   rgb(var(--x) / <alpha-value>) 语法支持透明度工具类（如 bg-primary/5）。
+   本平台强制 light 主题（与项目 light 主题一致），不使用暗色表面。
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  --color-bg: 248 250 252;          /* slate-50 页面背景 */
+  --color-surface: 255 255 255;     /* white 卡片表面 */
+  --color-primary: 79 70 229;       /* indigo-600 主色（信任/专业感） */
+  --color-primary-dark: 67 56 202;  /* indigo-700 主色 hover */
+  --color-muted: 100 116 139;       /* slate-500 次要文字 */
+  --color-border: 226 232 240;      /* slate-200 边框 */
+  --color-success: 22 163 74;       /* green-600 */
+  --color-danger: 220 38 38;        /* red-600 */
+  --color-warning: 217 119 6;       /* amber-600 */
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-slate-900 antialiased;
+  font-feature-settings: "tnum" on, "lnum" on;
+}
+
+/* 表单控件统一聚焦可见性（无障碍） */
+:where(input, button, a, select, textarea):focus-visible {
+  outline: 2px solid rgb(var(--color-primary) / 0.5);
+  outline-offset: 2px;
+}

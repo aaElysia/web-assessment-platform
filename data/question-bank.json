@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "title": "Web Psychological Assessment — Question Bank",
+    "version": "1.0.0",
+    "language": "zh-CN",
+    "description": "配置驱动的题库。评分引擎读取本文件，无需改动代码即可扩展题目。",
+    "likert": {
+      "scale": 5,
+      "minLabel": "非常不符合",
+      "maxLabel": "非常符合",
+      "options": [
+        { "value": 1, "label": "非常不符合" },
+        { "value": 2, "label": "比较不符合" },
+        { "value": 3, "label": "中立" },
+        { "value": 4, "label": "比较符合" },
+        { "value": 5, "label": "非常符合" }
+      ]
+    },
+    "scoring": {
+      "reverseRecode": "recoded = (scale + 1) - value  =>  6 - value",
+      "domainScore": "mean of recoded item values within the domain (range 1-5)",
+      "missingPolicy": "missing <= 1 item in a domain -> impute with domain mean of answered items, flag imputed=true; missing > 1 -> mark domain incomplete (score=null)"
+    }
+  },
+  "scales": [
+    {
+      "key": "big_five",
+      "name": "大五人格量表 (Big Five)",
+      "type": "personality",
+      "source": "Constructs based on BFI (John & Srivastava, 1999) / IPIP Big Five (public domain)",
+      "recommendedItemsPerDomain": 8,
+      "domains": [
+        { "key": "O", "name": "开放性 Openness", "itemIds": ["O1","O2","O3","O4","O5","O6","O7","O8"] },
+        { "key": "C", "name": "尽责性 Conscientiousness", "itemIds": ["C1","C2","C3","C4","C5","C6","C7","C8"] },
+        { "key": "E", "name": "外向性 Extraversion", "itemIds": ["E1","E2","E3","E4","E5","E6","E7","E8"] },
+        { "key": "A", "name": "宜人性 Agreeableness", "itemIds": ["A1","A2","A3","A4","A5","A6","A7","A8"] },
+        { "key": "N", "name": "情绪敏感性 Neuroticism", "itemIds": ["N1","N2","N3","N4","N5","N6","N7","N8"] }
+      ],
+      "items": [
+        { "id": "O1", "domain": "O", "reverse": false, "text": "我对新的想法和概念充满好奇。" },
+        { "id": "O2", "domain": "O", "reverse": false, "text": "我喜欢欣赏艺术、音乐或文学。" },
+        { "id": "O3", "domain": "O", "reverse": false, "text": "我乐于尝试不同于习惯的生活方式。" },
+        { "id": "O4", "domain": "O", "reverse": false, "text": "我有丰富的想象力和创意兴趣。" },
+        { "id": "O5", "domain": "O", "reverse": true,  "text": "我更喜欢按部就班，而不是寻求变化。" },
+        { "id": "O6", "domain": "O", "reverse": true,  "text": "抽象或哲学的讨论让我感到无聊。" },
+        { "id": "O7", "domain": "O", "reverse": true,  "text": "我对诗歌或艺术几乎没有兴趣。" },
+        { "id": "O8", "domain": "O", "reverse": true,  "text": "我倾向于避免那些我不够了解的新体验。" },
+
+        { "id": "C1", "domain": "C", "reverse": false, "text": "我做事前会制定清晰的计划。" },
+        { "id": "C2", "domain": "C", "reverse": false, "text": "我注重细节并力求准确。" },
+        { "id": "C3", "domain": "C", "reverse": false, "text": "我能坚持完成已经开始的任务。" },
+        { "id": "C4", "domain": "C", "reverse": false, "text": "我做事有条理，东西摆放整齐。" },
+        { "id": "C5", "domain": "C", "reverse": true,  "text": "我经常拖延，难以按时完成该做的事。" },
+        { "id": "C6", "domain": "C", "reverse": true,  "text": "我容易分心，难以保持专注。" },
+        { "id": "C7", "domain": "C", "reverse": true,  "text": "我对自己的时间安排比较随性、缺乏规划。" },
+        { "id": "C8", "domain": "C", "reverse": true,  "text": "一旦遇到麻烦，我容易放弃目标。" },
+
+        { "id": "E1", "domain": "E", "reverse": false, "text": "在社交场合中我感到精力充沛。" },
+        { "id": "E2", "domain": "E", "reverse": false, "text": "我喜欢成为人群中的焦点。" },
+        { "id": "E3", "domain": "E", "reverse": false, "text": "我乐于主动与陌生人交谈。" },
+        { "id": "E4", "domain": "E", "reverse": false, "text": "我享受热闹的聚会和活动。" },
+        { "id": "E5", "domain": "E", "reverse": true,  "text": "我更偏好独处而非参加社交活动。" },
+        { "id": "E6", "domain": "E", "reverse": true,  "text": "在人群中我容易感到疲惫。" },
+        { "id": "E7", "domain": "E", "reverse": true,  "text": "我不太主动发起与他人的联系。" },
+        { "id": "E8", "domain": "E", "reverse": true,  "text": "安静独处比参加派对更让我舒服。" },
+
+        { "id": "A1", "domain": "A", "reverse": false, "text": "我乐于帮助他人并体谅其感受。" },
+        { "id": "A2", "domain": "A", "reverse": false, "text": "我倾向于相信他人是善意和诚实的。" },
+        { "id": "A3", "domain": "A", "reverse": false, "text": "我愿意在合作中礼让和妥协。" },
+        { "id": "A4", "domain": "A", "reverse": false, "text": "我对他人的困难抱有同理心。" },
+        { "id": "A5", "domain": "A", "reverse": true,  "text": "我容易怀疑他人的动机。" },
+        { "id": "A6", "domain": "A", "reverse": true,  "text": "在争论中我倾向于咄咄逼人。" },
+        { "id": "A7", "domain": "A", "reverse": true,  "text": "我不太在意别人是否喜欢我。" },
+        { "id": "A8", "domain": "A", "reverse": true,  "text": "我认为大多数人更关心自己而非他人。" },
+
+        { "id": "N1", "domain": "N", "reverse": false, "text": "我容易感到焦虑或紧张。" },
+        { "id": "N2", "domain": "N", "reverse": false, "text": "面对压力时我的情绪波动很大。" },
+        { "id": "N3", "domain": "N", "reverse": false, "text": "我常为小事感到烦恼或担忧。" },
+        { "id": "N4", "domain": "N", "reverse": false, "text": "我容易陷入低落或沮丧的情绪。" },
+        { "id": "N5", "domain": "N", "reverse": true,  "text": "我通常能保持冷静，不易被激怒。" },
+        { "id": "N6", "domain": "N", "reverse": true,  "text": "面对困难时我能维持情绪稳定。" },
+        { "id": "N7", "domain": "N", "reverse": true,  "text": "我很少感到紧张或不安。" },
+        { "id": "N8", "domain": "N", "reverse": true,  "text": "压力情境下我仍能从容应对。" }
+      ]
+    },
+    {
+      "key": "ai_adoption",
+      "name": "AI 技术采纳态度量表 (AI Technology Adoption Attitude Scale)",
+      "type": "attitude",
+      "source": "Constructs adapted from TAM / UTAUT2 / AI Trust & Concern literature",
+      "domains": [
+        { "key": "PU", "name": "感知有用性 Perceived Usefulness", "itemIds": ["PU1","PU2","PU3","PU4"] },
+        { "key": "TR", "name": "信任 Trust", "itemIds": ["TR1","TR2","TR3","TR4"] },
+        { "key": "WA", "name": "采纳意愿 Willingness to Adopt", "itemIds": ["WA1","WA2","WA3","WA4"] },
+        { "key": "LA", "name": "学习态度 Learning Attitude", "itemIds": ["LA1","LA2","LA3","LA4"] },
+        { "key": "CN", "name": "对AI的担忧 Concerns about AI", "itemIds": ["CN1","CN2","CN3","CN4"], "polarity": "higher = more concern" }
+      ],
+      "composite": {
+        "key": "ai_adoption_index",
+        "label": "AI 采纳态度合成指数（等权）",
+        "formula": "( mean(PU, TR, WA, LA) + (6 - mean(CN)) ) / 2",
+        "range": "1-5, higher = more favorable adoption attitude",
+        "weighting": "equal weight (documented; no unvalidated weighting claimed)"
+      },
+      "items": [
+        { "id": "PU1", "domain": "PU", "reverse": false, "text": "我认为 AI 工具能提高我的工作与学习效率。" },
+        { "id": "PU2", "domain": "PU", "reverse": false, "text": "AI 能帮助我更好地完成复杂任务。" },
+        { "id": "PU3", "domain": "PU", "reverse": true,  "text": "我觉得 AI 对我的日常任务帮助有限。" },
+        { "id": "PU4", "domain": "PU", "reverse": true,  "text": "没有 AI，我也能轻松完成现有工作。" },
+
+        { "id": "TR1", "domain": "TR", "reverse": false, "text": "我相信设计良好的 AI 系统给出的建议是可靠的。" },
+        { "id": "TR2", "domain": "TR", "reverse": false, "text": "我认为开发 AI 的机构会负责任地使用它。" },
+        { "id": "TR3", "domain": "TR", "reverse": true,  "text": "我对 AI 做出重要判断的能力缺乏信心。" },
+        { "id": "TR4", "domain": "TR", "reverse": true,  "text": "我不太相信 AI 会保护用户的利益。" },
+
+        { "id": "WA1", "domain": "WA", "reverse": false, "text": "我愿意在日常中主动尝试新的 AI 工具。" },
+        { "id": "WA2", "domain": "WA", "reverse": false, "text": "我会把 AI 纳入自己的工作或学习流程。" },
+        { "id": "WA3", "domain": "WA", "reverse": true,  "text": "我倾向于尽量避免使用 AI 类产品。" },
+        { "id": "WA4", "domain": "WA", "reverse": true,  "text": "即使可用，我也不太想改变现有方式去用 AI。" },
+
+        { "id": "LA1", "domain": "LA", "reverse": false, "text": "我对学习 AI 相关知识感到兴奋。" },
+        { "id": "LA2", "domain": "LA", "reverse": false, "text": "我愿意花时间提升自己使用 AI 的能力。" },
+        { "id": "LA3", "domain": "LA", "reverse": true,  "text": "我认为自己无需了解太多 AI 原理也能应付。" },
+        { "id": "LA4", "domain": "LA", "reverse": true,  "text": "钻研 AI 的新功能对我而言没什么吸引力。" },
+
+        { "id": "CN1", "domain": "CN", "reverse": false, "text": "我担心 AI 可能带来隐私泄露风险。" },
+        { "id": "CN2", "domain": "CN", "reverse": false, "text": "我担心 AI 会导致部分人失业。" },
+        { "id": "CN3", "domain": "CN", "reverse": false, "text": "我担心 AI 的决策缺乏透明与可解释性。" },
+        { "id": "CN4", "domain": "CN", "reverse": true,  "text": "我对 AI 带来的社会影响总体感到放心。" }
+      ]
+    }
+  ]
+}

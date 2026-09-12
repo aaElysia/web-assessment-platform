@@ -1,0 +1,57 @@
+{
+  "name": "web-assessment-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node -r ./readlink-polyfill.cjs node_modules/next/dist/bin/next dev",
+    "build": "tsx scripts/check-prod-env.mts && node -r ./readlink-polyfill.cjs node_modules/next/dist/bin/next build",
+    "start": "node -r ./readlink-polyfill.cjs node_modules/next/dist/bin/next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node scripts/e2e-results.mjs",
+    "test:render": "node scripts/smoke-render.mjs",
+    "verify:scoring": "node scripts/verify-scoring.mjs",
+    "dev:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-dev.ps1",
+    "dev:stop:dry": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-dev.ps1 -DryRun",
+    "gen:secrets": "node scripts/gen-secrets.mjs",
+    "audit:secrets": "node scripts/audit-secrets.mjs",
+    "check:prod-env": "tsx scripts/check-prod-env.mts --force --env-file .secrets/production.env",
+    "check:prod-env:local-negatives": "tsx scripts/check-prod-env.mts --force --env-file .secrets/negative-test.env",
+    "deploy:check": "npm run audit:secrets && npm run check:prod-env && npm run typecheck && npm test",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset",
+    "db:postgres:prepare": "node scripts/prisma-postgres.mjs prepare",
+    "db:postgres:push": "node scripts/prisma-postgres.mjs push",
+    "vercel-build": "node scripts/prisma-postgres.mjs generate && tsx scripts/check-prod-env.mts && next build"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.40",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.7",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.1"
+  }
+}
