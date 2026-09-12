@@ -4,6 +4,7 @@ import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
 
 const ITEMS = [
   { href: "/admin", label: "仪表盘" },
+  { href: "/admin/submissions", label: "提交明细" },
   { href: "/admin/analytics", label: "分析" },
   { href: "/admin/export", label: "导出" },
 ];

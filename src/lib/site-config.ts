@@ -8,6 +8,6 @@
 //  - 默认给一个占位 mailto，部署前请替换为真实地址，否则反馈会发到示例域名。
 
 export const SITE_CONFIG = {
-  feedbackUrl: "mailto:web-assessment-feedback@example.com?subject=心理测评平台反馈",
+  feedbackUrl: "mailto:xyp123452022@qq.com?subject=心理测评平台反馈",
   feedbackLabel: "留下反馈",
 } as const;

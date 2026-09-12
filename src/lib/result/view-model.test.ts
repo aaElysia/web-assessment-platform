@@ -67,6 +67,7 @@ const payload: ResultPayload = {
   answeredTotal: 60,
   itemTotal: 60,
   completionRate: 1,
+  qualityFlags: [],
 };
 
 describe("view-model · 量表检索", () => {

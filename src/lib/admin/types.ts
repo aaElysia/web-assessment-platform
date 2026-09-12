@@ -28,6 +28,78 @@ export type AdminRecord = {
   session: AdminSessionSummary | null;
 };
 
+// ---------------------------------------------------------------------------
+// 提交明细（管理端「提交明细」页 / submissions API）
+//
+// 与 stats 的「聚合」视角互补：这里逐条列出参与者，便于在测试期清理污染数据。
+// 类型与排序逻辑放在本无依赖文件，客户端组件与单测都能安全 import。
+// ---------------------------------------------------------------------------
+
+/** 提交明细行的「会话」摘要（取该参与者最新一次会话）。 */
+export type ParticipantSessionSummary = {
+  startedAt: string; // ISO
+  completedAt: string | null; // ISO 或 null（进行中 / 放弃）
+  status: string;
+  /** 该会话已作答的题数（用于快速识别空/不完整提交）。 */
+  itemCount: number;
+};
+
+/** 提交明细的一行：一名参与者 + 其最新会话（可能无会话）。 */
+export type ParticipantRow = {
+  id: string;
+  /** 匿名 ID 前 8 位，便于在 UI 中辨识与口头核对（完整 ID 仅在 title 提示）。 */
+  shortId: string;
+  createdAt: string; // ISO
+  status: string;
+  session: ParticipantSessionSummary | null;
+  /**
+   * 用于「填写时间」展示与默认排序的时间：
+   * completedAt ?? startedAt ?? createdAt（恒不为 null）。
+   */
+  submittedAt: string; // ISO
+};
+
+/** 可排序的时间字段。 */
+export type SortKey = "submittedAt" | "startedAt" | "createdAt";
+/** 排序方向。 */
+export type SortDir = "asc" | "desc";
+
+export type ListParticipantsOptions = {
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+};
+
+/**
+ * 纯函数：按指定时间字段对提交明细排序。
+ * - submittedAt：恒有值，直接比较；
+ * - startedAt：会话可能为 null，null 一律排到末尾（与方向无关）；
+ * - createdAt：恒有值，直接比较。
+ * 不修改入参（返回新数组）。
+ */
+export function sortParticipantRows(
+  rows: ParticipantRow[],
+  key: SortKey,
+  dir: SortDir
+): ParticipantRow[] {
+  const factor = dir === "asc" ? 1 : -1;
+  const pick = (r: ParticipantRow): string | null => {
+    if (key === "submittedAt") return r.submittedAt;
+    if (key === "startedAt") return r.session?.startedAt ?? null;
+    return r.createdAt;
+  };
+  return [...rows].sort((a, b) => {
+    const va = pick(a);
+    const vb = pick(b);
+    // null（无会话的 startedAt）永远垫底，无论升序降序
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    const ta = new Date(va).getTime();
+    const tb = new Date(vb).getTime();
+    return (ta - tb) * factor;
+  });
+}
+
 export type BandCounts = { low: number; medium: number; high: number };
 
 export type DomainSummary = {
