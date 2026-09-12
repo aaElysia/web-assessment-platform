@@ -138,9 +138,23 @@ function requirePostgresUrl() {
   return url;
 }
 
+function runSeed() {
+  console.log("\n> 写入量表与题目（seed，来自 data/question-bank.json）");
+  try {
+    execFileSync(
+      process.execPath,
+      [resolve(ROOT, "node_modules/tsx/dist/cli.mjs"), resolve(ROOT, "prisma/seed.ts")],
+      { cwd: ROOT, stdio: "inherit", env: process.env }
+    );
+  } catch {
+    console.error("\nseed 失败（上方为 tsx / prisma 原始输出）。");
+    process.exit(1);
+  }
+}
+
 function main() {
   const mode = process.argv[2] ?? "prepare";
-  const known = new Set(["prepare", "generate", "push", "all"]);
+  const known = new Set(["prepare", "generate", "push", "all", "provision"]);
   if (!known.has(mode)) {
     console.error(`未知模式：${mode}（可用：${[...known].join(" / ")}）`);
     process.exit(1);
@@ -155,10 +169,10 @@ function main() {
   }
 
   const schema = prepare();
-  if (mode === "generate" || mode === "all") {
+  if (mode === "generate" || mode === "all" || mode === "provision") {
     runPrisma(["generate", `--schema=${schema}`], "按 Postgres schema 生成 Prisma Client");
   }
-  if (mode === "push" || mode === "all") {
+  if (mode === "push" || mode === "all" || mode === "provision") {
     requirePostgresUrl();
     console.log(
       "提示：`db push` 不产生迁移历史，适合「全新空库首次建表」。\n" +
@@ -168,6 +182,9 @@ function main() {
       ["db", "push", `--schema=${schema}`, "--skip-generate", "--accept-data-loss"],
       "在目标 Postgres 上建表"
     );
+  }
+  if (mode === "provision") {
+    runSeed();
   }
 
   console.log("\n完成。注意：`generate` 会把 node_modules 里的 Prisma Client 切到 Postgres 版本；");

@@ -26,7 +26,8 @@
     "db:reset": "prisma migrate reset",
     "db:postgres:prepare": "node scripts/prisma-postgres.mjs prepare",
     "db:postgres:push": "node scripts/prisma-postgres.mjs push",
-    "vercel-build": "node scripts/prisma-postgres.mjs generate && tsx scripts/check-prod-env.mts && next build"
+    "db:postgres:provision": "node scripts/prisma-postgres.mjs provision",
+    "vercel-build": "node scripts/prisma-postgres.mjs generate && tsx scripts/check-prod-env.mts && node -r ./readlink-polyfill.cjs node_modules/next/dist/bin/next build"
   },
   "engines": {
     "node": ">=20.11.0"

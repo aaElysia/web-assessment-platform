@@ -51,4 +51,8 @@ function patch(fsModule) {
   }
 }
 
-patch(require("fs"));
+// 仅在本机 Windows 的异常卷（如 G: 盘）上注入补丁；Linux/macOS 上没有该 readlink bug，
+// 保持原生 fs 行为最安全（避免改变 webpack 对目录 readlink 的正常判定）。
+if (process.platform === "win32") {
+  patch(require("fs"));
+}
