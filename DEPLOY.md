@@ -45,6 +45,9 @@ git push -u origin main      # 实际分支名可能是 master，按 git branch 
 | `ADMIN_SESSION_SECRET` | 取自本机 `.secrets/production.env` |
 
 - **不要**设置 `ALLOW_INSECURE_DEFAULTS`（那是本地预览用的逃生舱，线上绝不能开）。
+- **不要**把这几个变量点成 **Sensitive**：Vercel 的 Sensitive 变量在「构建期」不可见，
+  会导致构建期的生产安全自检读不到它们而直接失败。保持默认（非 Sensitive）即可，
+  应用本身在运行期仍会用自己的部署自检保护管理端（无论变量是否 Sensitive）。
 - `.secrets/production.env` 在你本机、已被 git 忽略，里面 3 个值是强随机且与线上一致。直接打开该文件复制即可；想校验可运行 `npm run check:prod-env`（它只打印变量名与 SHA-256 前 8 位指纹，绝不打印明文）。
 
 ### 5. Deploy
