@@ -66,12 +66,15 @@ export function AiDomainBar({ data }: { data: BarPoint[] }) {
         </BarChart>
       </ResponsiveContainer>
 
-      <p className="mt-3 text-xs text-muted">
-        <span className="font-medium text-slate-600">读图提示：</span>
-        PU 感知有用性 / TR 信任 / WA 采纳意愿 / LA 学习态度 —— 数值越高越积极；
-        <span className="font-medium text-red-600">CN 对 AI 的担忧为反向语义，数值越高表示担忧越多</span>
-        ，并非越积极。
-      </p>
+      {/* 读图提示：独立成框，避免与下方逐维度分数列表视觉粘连 */}
+      <div className="mt-4 rounded-lg border border-line bg-slate-50 px-3 py-2.5">
+        <p className="text-xs leading-relaxed text-muted">
+          <span className="font-medium text-slate-700">读图提示：</span>
+          PU 感知有用性 / TR 信任 / WA 采纳意愿 / LA 学习态度 —— 数值越高越积极；
+          <span className="font-medium text-red-600">CN 对 AI 的担忧为反向语义，数值越高表示担忧越多</span>
+          ，并非越积极。
+        </p>
+      </div>
     </div>
   );
 }
