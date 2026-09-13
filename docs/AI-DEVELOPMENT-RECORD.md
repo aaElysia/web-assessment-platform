@@ -96,7 +96,7 @@ Agent 的工作是迭代式的：先生成模块，人类审查 diff，再决定
   return round(mean([...favorable, favorableConcern]), 4); // 5 个域等权，各 0.20
   ```
 
-  这一改让合成指数成为诚实的"探索性等权指数"，并同步修正了 `docs/assessment-framework.md` 与交接文档里此前写错的 `/2` 公式。
+  这一改让合成指数成为诚实的"探索性等权指数"，并修正了 `docs/assessment-framework.md` 里此前写错的 `/2` 公式（同批也在其他文档更正）。
 
 ### 案例二：独立重写评分实现，杜绝"程序验证程序"
 

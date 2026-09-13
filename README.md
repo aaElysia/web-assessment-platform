@@ -33,7 +33,6 @@ docs/           assessment-framework.md（评分逻辑权威规格） dev-plan.m
                 AI-DEVELOPMENT-RECORD.md（交付物 C：AI 辅助开发记录）
                 TECHNICAL-REPORT.md（交付物 E：技术报告）
                 PILOT-EVALUATION.md（交付物 D：真实用户试点评估）
-                process/（评审与修复过程日志，供追溯）
 readlink-polyfill.cjs  见下方"Windows 注意事项"
 ```
 
@@ -183,7 +182,6 @@ Bonferroni、题项计数守恒、`format=raw`）。
 | **E. 技术报告** | 11 问技术报告 | `docs/TECHNICAL-REPORT.md` |
 
 > 设计文档见 `docs/`：`assessment-framework.md` 为评分逻辑权威来源，`dev-plan.md` 记录架构与技术选型。
-> 评审与修复的**过程日志**归档于 `docs/process/`（含心理测量审查、UX 审查及对应修复记录），`CONTINUATION.md` 亦移入该目录，供需要追溯历史决策的读者查阅。
 
 ### 已实现的核心功能
 
