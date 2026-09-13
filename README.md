@@ -130,9 +130,9 @@ ADMIN_SESSION_SECRET="dev-only-secret-change-me"   # 生产 ≥32 位随机值
 ## 测试
 
 ```bash
-npm test                     # Vitest 单测（258 项）
+npm test                     # Vitest 单测（256 项）
 BASE_URL=http://localhost:3000 npm run test:e2e      # HTTP 契约测试（164 项断言，需先启动服务）
-BASE_URL=http://localhost:3000 npm run test:render   # 真实浏览器渲染冒烟（11 项断言，需先启动服务）
+BASE_URL=http://localhost:3000 npm run test:render   # 真实浏览器渲染冒烟（12 项断言，需先启动服务）
 BASE_URL=http://localhost:3000 npm run verify:scoring # 独立评分交叉验证（需先启动服务）
 ```
 
@@ -192,5 +192,5 @@ Bonferroni、题项计数守恒、`format=raw`）。
 - **评分引擎**：配置驱动的纯函数评分（反向重编码、缺失策略、分带、Cronbach's α、Pearson 相关、等权探索性合成指数）。
 - **结果页**：雷达图、条形图、逐维度明细、中性化解读与免责声明。
 - **数据收集**：匿名参与者 + 会话 + 逐题作答三层模型（Prisma，SQLite 本地 / Postgres 生产）。
-- **管理后台**：签名会话鉴权；仪表盘（参与量 / 完成率 / 维度均值·sd / 合成指数分布）；分析（α + bootstrap 区间 / 相关热力图 / 题项反应分布）；CSV 导出；**提交明细（按填写时间排序 + 逐条删除，应对测试期数据污染）**。
+- **管理后台**：签名会话鉴权；仪表盘（参与量 / 完成率 / 维度均值·sd / 合成指数分布）；分析（α + bootstrap 区间 / 相关热力图 / 题项反应分布）；CSV 导出；**提交明细（按提交 / 创建时间排序 + 逐条删除，应对测试期数据污染）**。
 

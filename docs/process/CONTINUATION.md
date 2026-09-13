@@ -183,7 +183,7 @@
   - 实测：**96 名参与者 / 1056 个数值逐格一致（容差 1e-4）**，抽样结果页一致，8/8 断言通过。
   - 为什么必须重写实现：若两边共用同一份代码，「验证」就退化成「用程序的结果验证程序」，口径整体错掉也照样全绿。唯一共享的是**题库配置**（题目归属与反向标记属「数据」而非「实现」）。
 - 测试（**新增 46，总数达 218**）：`analysis.test.ts`(32：α 无定义/null 语义、**负 α 如实返回**、listwise 剔除计数、bootstrap 同种子可复现、相关对称性与 Bonferroni、**计数守恒**、**反向题不因原始分被误报为地板效应**)、`stats.test.ts` 新增原始导出与 `elapsedSecOf`(6)。E2E 93 → **139 项断言**（新增 [11] 分析契约 46 项）。
-- 验证结果：typecheck 绿；`npm test` **240/240**（Step 9 收尾 218，Step 10 新增 22；**当前全量 258，含部署后新增 18，见 §4**）；`npm run build` 通过；E2E **164/164**（Step 10 新增 28 项部署安全契约）；`test:render` **11/11**；`verify:scoring` **8/8**（1056 个数值一致）。
+- 验证结果：typecheck 绿；`npm test` **240/240**（Step 9 收尾 218，Step 10 新增 22；**当前全量 256（已由 258 降至 256：移除 startedAt 排序测试 2 条），见 §4**）；`npm run build` 通过；E2E **164/164**（Step 10 新增 28 项部署安全契约）；`test:render` **12/12**；`verify:scoring` **8/8**（1056 个数值一致）。
 - ⚠️ **当前库内含大量 E2E 制造的测试数据**（全 3 分、全 5 分、只答单维度等），因此分析页上的 α 与相关数值**不具实质心理测量学意义**（会看到 α 极低甚至为负、维度间相关接近 0）。要看真实结果需先清库（`npm run db:reset`）再收集真人数据。
 
 **部署后补充（2026-09-13，已验证）**
@@ -227,8 +227,8 @@
 - ORM/DB：Prisma 5；**本地 SQLite（`file:./dev.db`），生产 PostgreSQL（Neon）**，同 schema 零改代码切换（仅改 provider + `DATABASE_URL`）。
 - 输入校验：Zod 3（已用）。
 - 鉴权：自研轻量方案（不引入外部 IdP）——`ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_SESSION_SECRET` + HMAC-SHA256 签名会话、httpOnly cookie、8 小时有效；无状态、无会话表。
-- 测试：Vitest 2（已配置，**已落地 258 个单测并全绿**（Step 9 收尾 218，Step 10 新增 22，部署后新增 18：提交明细/排序 `submissions.test.ts` 等）：题库契约 7（含 `type` 硬契约）+ 解读文案完整性 4 + 草稿持久化 7 + 评分 29 + 信度 15 + 相关 22 + 结果视图模型 15 + **结果数据链 6** + 鉴权 35 + 限流 7 + 管理端统计 35（含原始作答导出 / `elapsedSecOf`）+ **管理端分析 32** + 守卫覆盖 4 + 凭据强度规则 7 + 生产环境自检 15 + 提交明细/排序 18）。另有 `test:e2e`(164)、`test:render`(11) 与 `verify:scoring`(8)。
-- 三层测试命令：`npm test`（**258 单测**）、`npm run test:e2e`（**164 项** HTTP 契约断言，含 Step 10 部署安全契约）、`npm run test:render`（**11 项**真实浏览器渲染断言 —— 用**本机** Chrome/Edge 无头模式，专门覆盖「客户端渲染的页面上到底有没有分数」这个盲区）。
+- 测试：Vitest 2（已配置，**已落地 256 个单测并全绿**（Step 9 收尾 218，Step 10 新增 22，部署后净增 16：提交明细/排序 `submissions.test.ts` 等）：题库契约 7（含 `type` 硬契约）+ 解读文案完整性 4 + 草稿持久化 7 + 评分 29 + 信度 15 + 相关 22 + 结果视图模型 15 + **结果数据链 6** + 鉴权 35 + 限流 7 + 管理端统计 35（含原始作答导出 / `elapsedSecOf`）+ **管理端分析 32** + 守卫覆盖 4 + 凭据强度规则 7 + 生产环境自检 15 + 提交明细/排序 16）。另有 `test:e2e`(164)、`test:render`(12) 与 `verify:scoring`(8)。
+- 三层测试命令：`npm test`（**256 单测**）、`npm run test:e2e`（**164 项** HTTP 契约断言，含 Step 10 部署安全契约）、`npm run test:render`（**12 项**真实浏览器渲染断言 —— 用**本机** Chrome/Edge 无头模式，专门覆盖「客户端渲染的页面上到底有没有分数」这个盲区）。
 - **Playwright 交互级 E2E 仍未做**：点击选项、表单提交、刷新续答等**交互动作**未验证；渲染结果层已由 `test:render` 覆盖（见 §9 第 8 条）。
 - 部署：Vercel（前端+API 一体）+ Neon Postgres。
 
@@ -523,7 +523,7 @@ total_var = variance(被试总分)
 - ✅ α 合理性：完全一致 → 恰为 1；零方差 → null；负协方差 → −12；手算 0.4167。
 - ✅ 相关/p 值：手算 r=2/√52；p 值用统计表临界值反向校验（df=8，r=0.632→p≈0.05，r=0.765→p≈0.01）。
 - ✅ E2E 契约测试：`npm run test:e2e`（`scripts/e2e-results.mjs`），**99 项断言**，覆盖真实 HTTP 提交→查结果→手算比对 + 解读文案契约 + 管理端鉴权/导出/页面守卫 + **结果 API 字段契约（`type`/domains/composite）**。
-- ✅ **结果页真实渲染断言**（新增）：`npm run test:render`（`scripts/smoke-render.mjs`），**11 项断言**，用本机 Chrome/Edge 无头模式执行客户端 JS，断言维度名/分数/分带/图表 SVG/合成指数确实出现在页面上。**这条命令是「页面全空但测试全绿」的唯一有效防线**——curl 与 E2E 都看不到客户端渲染内容。
+- ✅ **结果页真实渲染断言**（新增）：`npm run test:render`（`scripts/smoke-render.mjs`），**12 项断言**，用本机 Chrome/Edge 无头模式执行客户端 JS，断言维度名/分数/分带/图表 SVG/合成指数确实出现在页面上。**这条命令是「页面全空但测试全绿」的唯一有效防线**——curl 与 E2E 都看不到客户端渲染内容。
 - ✅ **管理端无令牌 401 断言**（Step 8 已补）：`/api/admin/stats`、`/api/admin/export` 无 cookie → 401；伪造令牌 → 401。
 - ⬜ **Excel 交叉验证**（框架文档 §5 第 5 条）：尚未做，**建议在 Step 9 出报告时补做**（`/api/admin/export` 已可导出 CSV → 表格独立手算 5–10 名被试 → 与程序输出对账）。**注意**：手算前必须知道 CSV 的维度列已是**反向重编码后**的均值，直接对原始作答取平均会得到错误的对账结果。
 - ⬜ **交互级浏览器 E2E**：仍是空白（点击选项、表单提交、刷新续答）。渲染结果层已由 `test:render` 覆盖；**注意不要在 Step 9 新增维度时忘了页面渲染**——若新增量表，务必跑一次 `test:render`。
@@ -591,7 +591,7 @@ total_var = variance(被试总分)
 5. **（已修）题库 JSON 的 `composite` 缺 `label` 字段**：`loader.ts` 的类型声明为 `{ label: string; formula }`，但 JSON 实际只有 `key/formula/range/weighting` → 运行时 `label` 为 undefined。已修正 loader 类型为 `{ key; label?; formula; range?; weighting? }` 并给 JSON 补中文 `label`。
 6. **`.env.local` 缺失**：仅 `.env`（已被 gitignore 忽略，本地用）与 `.env.example` 存在，生产用强随机 `ADMIN_SESSION_SECRET` 与密码。
 7. **小样本不稳定**：试点 n 小，α/相关波动大，报告须如实标注样本量与置信区间，不得夸大。`pearsonPValue` 已实现，但**不得单独解读显著性**——必须同时展示 n。
-8. **（部分缓解）测试覆盖**：现有 **258 个单测 + 164 项 E2E + 11 项渲染冒烟 + 8 项独立交叉验证**。**渲染结果层已覆盖**（`npm run test:render` 用本机 Chrome/Edge 无头模式，断言维度名/分数/图表确实出现在页面上）；**数值正确性已由独立实现复核**（`npm run verify:scoring`，见 §8.3）。**仍未覆盖的是"交互动作"**——点击选项、刷新续答、登录表单提交等只在单测/HTML 外壳层面验证（`agent-browser` 需约 500MB Chromium，未安装）。建议 Step 10 补 Playwright 交互 E2E。
+8. **（部分缓解）测试覆盖**：现有 **256 个单测 + 164 项 E2E + 12 项渲染冒烟 + 8 项独立交叉验证**。**渲染结果层已覆盖**（`npm run test:render` 用本机 Chrome/Edge 无头模式，断言维度名/分数/图表确实出现在页面上）；**数值正确性已由独立实现复核**（`npm run verify:scoring`，见 §8.3）。**仍未覆盖的是"交互动作"**——点击选项、刷新续答、登录表单提交等只在单测/HTML 外壳层面验证（`agent-browser` 需约 500MB Chromium，未安装）。建议 Step 10 补 Playwright 交互 E2E。
 9. **（已修复·环境）残留 dev 服务器累积**：此前用 `(npm run dev &)` 启动导致进程孤儿化，且 Git Bash 的 `pkill` 在 Windows 拿不到其它会话进程，累积达 **7 个**。修复 = `npm run dev:stop`（`scripts/stop-dev.ps1`，只杀监听本项目端口的 node 进程）。**后续请优先用可管理的后台任务方式启动，或启动后主动 `dev:stop` 收尾。**
    - **⚠️ 二次修复（Step 8）**：初版只用 `Get-NetTCPConnection` 探测，该 cmdlet 在受限/沙箱会话下会**静默返回空**，脚本随即打印「没有发现被占用的端口」并 exit 0 —— 用户以为清理过了，实际一个进程都没杀（最坏的一类失败）。现已改为**双通道**（`netstat` + cmdlet）取并集按 PID 去重，**两者皆不可用时显式报错并 exit 3**；新增 `-DryRun` / `npm run dev:stop:dry` 先看后杀；非 node 进程只报告不处理。
 10. **（环境·重要）沙箱安全删除防护会拦截批量删除**：`next dev` 启动时清空 `.next`，当文件数 ≥50 时被拦截并崩溃（`SAFE_DELETE_BULK_CONFIRM_REQUIRED`）。规避：启动 dev 前先清空 `.next`，或直接用 `npm run build` + `npm start` 做生产模式预览（`next start` 不需要清 `.next`）。
@@ -654,7 +654,7 @@ total_var = variance(被试总分)
 1. ✅ 根因：题库缺 `scale.type` → 前端按 type 定位量表失败 → 卡片内全空（详见 §2「Step 7 修复」与 §9 第 22 条）。
 2. ✅ 修复：`data/question-bank.json` 两个量表补 `type`；`prisma/seed.ts` 改为读 `scale.type`，取值非法即抛错；`seed.ts` 本地类型补该字段。
 3. ✅ 新守卫四处：`loader.test.ts`（type 硬契约）、`src/lib/result/pipeline.test.ts`（真实链路 + JSON 往返，6 项）、`scripts/smoke-render.mjs` + `npm run test:render`（真实浏览器渲染，11 项）、E2E [8] 增加结果 API 字段契约（93 → **99**）。
-4. ✅ 验收：**故意删除题库 `type` → `pipeline.test.ts` + `loader.test.ts` 共 7 项立即变红**（`expected null not to be null`，与线上症状一致），恢复后 `npm test` **180/180**、`test:e2e` **99/99**、`test:render` **11/11**、typecheck / build 全绿。
+4. ✅ 验收：**故意删除题库 `type` → `pipeline.test.ts` + `loader.test.ts` 共 7 项立即变红**（`expected null not to be null`，与线上症状一致），恢复后 `npm test` **180/180**、`test:e2e` **99/99**、`test:render` **12/12**、typecheck / build 全绿。
 5. ✅ 人工复核：用户原链接（`?pid=fb3f307d-…`）现已渲染出大五 5 维分数 4.50 / 4.00 / 4.00 / 4.00 / 3.00、分带、逐维解读、AI 5 维分数与合成指数 4.00，以及 2 个图表 SVG。
 
 **Step 8 — Admin Dashboard（已完成并验证）**
@@ -675,7 +675,7 @@ total_var = variance(被试总分)
 5. ✅ **独立评分交叉验证**（框架文档 §5 第 5 条）：`scripts/verify-scoring.mjs`（`npm run verify:scoring`）**不 import 项目代码**，独立实现口径后与 `format=csv` 逐格对账 + 抽样比对 `/api/results/:pid`，并产出 `verify-output/crosscheck-*.csv`。实测 **1056 个数值全一致**。
 6. ✅ 新增 `/api/admin/export?format=raw`（逐题原始作答宽表）；三个新 API 均调 `guardAdminApi`（`guard-coverage.test.ts` 已自动要求）。
 7. ✅ 测试：新增 **32 个分析单测 + 6 个导出单测**（总数 180 → **218**）；E2E 99 → **139 断言**（新增 [11] 分析契约）。
-8. ✅ 验收（DoD）：未登录访问三个新 API → 401；计数守恒、矩阵对称、α 结构契约全部成立；页面渲染出 55 个热力格子（每格含 n）、60 道题、10 个折叠区；`npm test` **218/218**、`test:e2e` **139/139**、`test:render` **11/11**、`verify:scoring` **8/8**、typecheck / build 全绿。
+8. ✅ 验收（DoD）：未登录访问三个新 API → 401；计数守恒、矩阵对称、α 结构契约全部成立；页面渲染出 55 个热力格子（每格含 n）、60 道题、10 个折叠区；`npm test` **218/218**、`test:e2e` **139/139**、`test:render` **12/12**、`verify:scoring` **8/8**、typecheck / build 全绿。
 9. ⚠️ **当前库内是测试数据**：分析页数值无实质心理测量学意义（见 §9 第 27 条）。
 
 **Step 10 — Deployment（代码侧已完成并验证；仅剩"填 Neon 凭据 + 点部署"这一人工动作）**
@@ -749,7 +749,7 @@ total_var = variance(被试总分)
 - **基础组件复用**：页面统一使用 `src/components/ui/*`（Container/Card/Button/ProgressBar/Alert/Badge/LikertScale 等），不要各页重复造样式。
 - **题目标识契约**：客户端与 API 之间一律用题目 **`code`**（如 `O1`）作为题目标识（`GET /api/questionnaire` 的 items 输出 `code`；`POST /api/responses` 的 `itemId` 即 code，后端再解析为 `Item.id`）。切勿让前端提交数据库 cuid。
 - **草稿存储键约定**：`wap_participant_id`（当前参与者）、`wap_draft_<pid>`（该参与者草稿，含 `answers`/`demographics`/`updatedAt`）。改键名会使老草稿失联。
-- **评分口径不可变**：反向重编码 `6 − value`、维度分 = recoded 均值、缺失 ≤1 填补 / >1 判 incomplete、合成指数 `(PU + TR + WA + LA + (6 − mean(CN)))/5`（五域等权，每域 0.20）、分带阈值 (2.5 / 3.5)。改动会同时破坏 **258 个单测**、**164 项 E2E**、**11 项渲染断言**与 `verify:scoring` 的逐格对账。
+- **评分口径不可变**：反向重编码 `6 − value`、维度分 = recoded 均值、缺失 ≤1 填补 / >1 判 incomplete、合成指数 `(PU + TR + WA + LA + (6 − mean(CN)))/5`（五域等权，每域 0.20）、分带阈值 (2.5 / 3.5)。改动会同时破坏 **256 个单测**、**164 项 E2E**、**12 项渲染断言**与 `verify:scoring` 的逐格对账。
 - **数值输出约定**：引擎内部全精度，对外 `round(x, 4)`；`incomplete` → `score=null` + `band=null`；合成指数不可部分合成。
 - **图表库用 Recharts**（已在 dependencies，Step 7 起使用），不引入其它图表库；配色复用 `dimension-*` / `ai-*` 令牌。
 - **顶栏导航去重规则**（Step 6 用户反馈）：`SiteHeader` 保持路由自适应——首页不重复主 CTA，管理端页面不出现前台流程链接；新增页面时沿用此规则，不要把同一入口同时放在顶栏与页面 hero 里。
