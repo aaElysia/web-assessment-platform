@@ -298,15 +298,15 @@ function ResultInner() {
           <Button variant="secondary" size="md" onClick={handleCopyLink}>
             {copied ? "已复制 ✓" : "复制结果链接"}
           </Button>
+          <Button variant="secondary" size="md" onClick={handleCopyEmail}>
+            {emailCopied ? "邮箱已复制 ✓" : "复制邮箱"}
+          </Button>
           <a
             href={SITE_CONFIG.feedbackUrl}
             className={buttonClasses("primary", "md")}
           >
             {SITE_CONFIG.feedbackLabel}
           </a>
-          <Button variant="ghost" size="md" onClick={handleCopyEmail}>
-            {emailCopied ? "邮箱已复制 ✓" : "复制邮箱"}
-          </Button>
         </div>
         <p className="mt-3 text-xs text-muted">
           反馈邮箱：
