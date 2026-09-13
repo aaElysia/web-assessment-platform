@@ -32,6 +32,7 @@ verify-output/  交叉验证产出的对账表（crosscheck-*.csv，自动生成
 docs/           assessment-framework.md（评分逻辑权威规格） dev-plan.md（架构与技术选型）
                 AI-DEVELOPMENT-RECORD.md（交付物 C：AI 辅助开发记录）
                 TECHNICAL-REPORT.md（交付物 E：技术报告）
+                PILOT-EVALUATION.md（交付物 D：真实用户试点评估）
                 process/（评审与修复过程日志，供追溯）
 readlink-polyfill.cjs  见下方"Windows 注意事项"
 ```
@@ -178,7 +179,7 @@ Bonferroni、题项计数守恒、`format=raw`）。
 | **A. 已部署应用** | 可公开访问的测评平台 | `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` |
 | **B. 源代码** | 完整仓库（含 README、测试、部署配置） | `https://github.com/aaElysia/web-assessment-platform` |
 | **C. AI 开发记录** | 如何用 agentic AI 开发、AI 犯过的错与纠正 | `docs/AI-DEVELOPMENT-RECORD.md` |
-| **D. 真实用户试点** | ≥10 名独立参与者的完成与反馈分析 | ⏳ 待完成（计划方法见 `docs/TECHNICAL-REPORT.md` §7） |
+| **D. 真实用户试点** | ≥10 名独立参与者的完成与反馈分析 | ✅ 已完成（`docs/PILOT-EVALUATION.md`；§7 见 `docs/TECHNICAL-REPORT.md`） |
 | **E. 技术报告** | 11 问技术报告 | `docs/TECHNICAL-REPORT.md` |
 
 > 设计文档见 `docs/`：`assessment-framework.md` 为评分逻辑权威来源，`dev-plan.md` 记录架构与技术选型。
