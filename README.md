@@ -3,7 +3,7 @@
 > Agentic AI Web Assessment Challenge 参赛项目
 > 匿名心理测评平台：Big Five 人格 + AI 技术采纳态度。教育 / 自我洞察用途，**非临床诊断**。
 
-**English abstract.** An anonymized web assessment platform that measures two constructs — the Big Five personality traits (40 items) and attitudes toward AI adoption (20 items, including a reverse-coded concern dimension) — via a 60-item, 5-point Likert questionnaire. It auto-scores responses, renders interactive result visualizations, stores data for aggregate analysis, and ships a researcher admin dashboard (reliability / correlation analysis, CSV export, submission management). Built with Next.js 14 + Prisma, deployed on Vercel + Neon, and developed throughout with an agentic AI coding assistant. Live app: `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` · Source: `https://github.com/aaElysia/web-assessment-platform`.
+**English abstract.** An anonymized web assessment platform that measures two constructs — the Big Five personality traits (40 items) and attitudes toward AI adoption (20 items, including a reverse-coded concern dimension) — via a 60-item, 5-point Likert questionnaire. It auto-scores responses, renders interactive result visualizations, stores data for aggregate analysis, and ships a researcher admin dashboard (reliability / correlation analysis, CSV export, submission management). Built with Next.js 14 + Prisma, deployed on Vercel + Neon, and developed throughout with an agentic AI coding assistant. Live app: `https://web-assessment-platform.vercel.app` · Source: `https://github.com/aaElysia/web-assessment-platform`.
 
 ## 技术栈
 
@@ -175,7 +175,7 @@ Bonferroni、题项计数守恒、`format=raw`）。
 
 | 交付物 | 内容 | 位置 / 链接 |
 |---|---|---|
-| **A. 已部署应用** | 可公开访问的测评平台 | `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` |
+| **A. 已部署应用** | 可公开访问的测评平台 | `https://web-assessment-platform.vercel.app` |
 | **B. 源代码** | 完整仓库（含 README、测试、部署配置） | `https://github.com/aaElysia/web-assessment-platform` |
 | **C. AI 开发记录** | 如何用 agentic AI 开发、AI 犯过的错与纠正 | `docs/AI-DEVELOPMENT-RECORD.md` |
 | **D. 真实用户试点** | ≥10 名独立参与者的完成证据与分析 | ✅ 已完成（完成证据 `docs/PILOT-EVALUATION.md`；量化分析与用户反馈见 `docs/TECHNICAL-REPORT.md` §7） |

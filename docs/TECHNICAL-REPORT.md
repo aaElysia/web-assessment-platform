@@ -14,7 +14,7 @@
 
 平台端到端包含：知情同意 → 60 题交互式问卷（5 点 Likert）→ 自动评分 → 个性化交互式结果（图表 + 解读）→ 匿名数据入库 → 研究者管理后台（聚合统计、信度/相关分析、CSV 导出、带删除与排序的提交明细）。
 
-- 公开 URL（部署于 Vercel）：`https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app`
+- 公开 URL（部署于 Vercel）：`https://web-assessment-platform.vercel.app`
 - 源码仓库（GitHub）：`https://github.com/aaElysia/web-assessment-platform`
 
 ---
