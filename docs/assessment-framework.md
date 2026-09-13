@@ -163,7 +163,7 @@
 - **AI 采纳态度合成指数（AI Adoption Index）**，将"担忧"反向并入正向态度：
   - `positive_avg = mean(PU, TR, WA, LA)`（各维度分均值）
   - `concern_score = mean(CN)`
-  - `AI_Adoption_Index = ( positive_avg + (6 − concern_score) ) / 2`
+  - `AI_Adoption_Index = ( PU + TR + WA + LA + (6 − concern_score) ) / 5`（五域等权算术平均，每域权重 0.20）
   - 范围 1–5，越高 = 对 AI 的采纳态度越积极。
 - 合成指数在报告中与 5 个维度分并列展示，并注明权重为等权，可在技术报告中讨论更精细的加权方案（本项目不作未经验证的权重声称）。
 
