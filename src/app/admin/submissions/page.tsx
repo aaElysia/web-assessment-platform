@@ -122,12 +122,11 @@ export default async function SubmissionsPage({
                   <tr key={r.id} className="border-b border-line/60 hover:bg-slate-50">
                     <td className="px-3 py-2 tabular-nums text-slate-800">
                       {fmt(r.submittedAt)}
-                      {r.session?.startedAt &&
-                        r.session.startedAt !== r.submittedAt && (
-                          <span className="ml-1 text-xs text-muted">
-                            （开始 {fmt(r.session.startedAt)}）
-                          </span>
-                        )}
+                      {fmt(r.createdAt) !== fmt(r.submittedAt) && (
+                        <span className="ml-1 text-xs text-muted">
+                          （创建于 {fmt(r.createdAt)}）
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       <StatusBadge row={r} />
@@ -152,7 +151,8 @@ export default async function SubmissionsPage({
         )}
         <p className="mt-4 text-xs text-muted">
           默认按「提交时间」倒序（最新在顶部），方便快速定位并清理测试提交。删除为级联操作，
-          会一并清除该参与者的全部作答明细。
+          会一并清除该参与者的全部作答明细。主时间后灰色小字为「创建于」时间，
+          仅在它与提交时间不在同一秒时显示，避免重复。
         </p>
       </Card>
     </Container>
