@@ -179,7 +179,7 @@ Bonferroni、题项计数守恒、`format=raw`）。
 | **A. 已部署应用** | 可公开访问的测评平台 | `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` |
 | **B. 源代码** | 完整仓库（含 README、测试、部署配置） | `https://github.com/aaElysia/web-assessment-platform` |
 | **C. AI 开发记录** | 如何用 agentic AI 开发、AI 犯过的错与纠正 | `docs/AI-DEVELOPMENT-RECORD.md` |
-| **D. 真实用户试点** | ≥10 名独立参与者的完成与反馈分析 | ✅ 已完成（`docs/PILOT-EVALUATION.md`；§7 见 `docs/TECHNICAL-REPORT.md`） |
+| **D. 真实用户试点** | ≥10 名独立参与者的完成证据与分析 | ✅ 已完成（完成证据 `docs/PILOT-EVALUATION.md`；量化分析与用户反馈见 `docs/TECHNICAL-REPORT.md` §7） |
 | **E. 技术报告** | 11 问技术报告 | `docs/TECHNICAL-REPORT.md` |
 
 > 设计文档见 `docs/`：`assessment-framework.md` 为评分逻辑权威来源，`dev-plan.md` 记录架构与技术选型。

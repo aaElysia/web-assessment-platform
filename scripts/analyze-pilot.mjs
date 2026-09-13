@@ -134,23 +134,82 @@ const elapsed = completed.map((r) => +r.elapsed_sec).filter((v) => Number.isFini
 const elapsedStats = desc(elapsed);
 
 // ---- 异常应答模式 ----
+function domainSd(vals) {
+  if (vals.length < 2) return 0;
+  const m = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return Math.sqrt(vals.reduce((a, b) => a + (b - m) ** 2, 0) / (vals.length - 1));
+}
+// 周期循环检测（按相位众数建模板，对「模式晚开始」稳健）：p∈{2,3,4,6,8} 且匹配率≥0.9
+function detectCyclic(vals) {
+  const n = vals.length;
+  for (const p of [2, 3, 4, 6, 8]) {
+    if (p >= n / 2) continue;
+    const buckets = Array.from({ length: p }, () => ({}));
+    for (let i = 0; i < n; i++) { const v = vals[i]; buckets[i % p][v] = (buckets[i % p][v] || 0) + 1; }
+    const tpl = buckets.map((b) => { let best = null, bc = -1; for (const k in b) if (b[k] > bc) { bc = b[k]; best = +k; } return best; });
+    let match = 0; for (let i = 0; i < n; i++) if (vals[i] === tpl[i % p]) match++;
+    if (match / n >= 0.9) return p;
+  }
+  return 0;
+}
+// 严格交替检测：相邻差符号变化率 >0.85（如 4,2,4,2…）
+function signChangeRate(vals) {
+  let changes = 0, pairs = 0;
+  for (let i = 1; i < vals.length - 1; i++) {
+    const d1 = vals[i] - vals[i - 1];
+    const d2 = vals[i + 1] - vals[i];
+    if (d1 !== 0 && d2 !== 0) { pairs++; if (Math.sign(d1) !== Math.sign(d2)) changes++; }
+  }
+  return pairs ? changes / pairs : 0;
+}
+
 const itemCodes = Object.keys(itemMeta);
 const patternFlags = completed.map((r) => {
   const vals = itemCodes.map((c) => +r[c]).filter((v) => Number.isFinite(v));
   const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
   const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / (vals.length - 1));
   const uniq = new Set(vals).size;
+  // 维度级平坦：仅以 8 题的大五维度为判定依据（sd<0.05 即近常量直线）；
+  // 4 题的 AI 子量表全同较常见，不计入主计数（边界案例在文中单列）。
+  let flatDomains = 0;
+  const flatList = [];
+  for (const scaleKey of Object.keys(domainDefs)) {
+    for (const d of domainDefs[scaleKey]) {
+      if (d.items.length < 8) continue;
+      const dv = d.items.map((c) => recode(+r[c], itemMeta[c].reverse));
+      if (domainSd(dv) < 0.05) { flatDomains++; flatList.push(`${scaleKey}.${d.key}`); }
+    }
+  }
+  let maxRun = 1, run = 1;
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i] === vals[i - 1]) { run++; maxRun = Math.max(maxRun, run); } else run = 1;
+  }
+  const cyclicP = detectCyclic(vals);
+  const altRate = +signChangeRate(vals).toFixed(3);
   return {
     id: r.participant_id.slice(0, 8),
     elapsed: +r.elapsed_sec,
     sd60: +sd.toFixed(3),
     uniqueAnswers: uniq,
-    // 直选/低变异：跨 60 题 SD < 0.6 视为疑似不加区分作答
-    lowVariance: sd < 0.6,
-    // 极快完成：< 90 秒答完 60 题（约 <1.5s/题）
+    flatDomains,
+    flatList,
+    maxSameRun: maxRun,
+    cyclic: cyclicP,
+    alternatingRate: altRate,
     veryFast: +r.elapsed_sec < 90,
   };
 });
+// 综合判定：极速 + 维度直线 + 周期循环 + 严格交替，任一即视为「疑似低投入/机械作答」
+const anomalous = patternFlags
+  .filter((p) => p.veryFast || p.flatDomains >= 1 || p.cyclic > 0 || p.alternatingRate > 0.85)
+  .map((p) => {
+    const reasons = [];
+    if (p.veryFast) reasons.push(`极速完成(${p.elapsed}s)`);
+    if (p.flatDomains >= 1) reasons.push(`维度直线(${p.flatList.join(",")})`);
+    if (p.cyclic > 0) reasons.push(`周期${p.cyclic}严格循环`);
+    if (p.alternatingRate > 0.85) reasons.push(`严格交替(符号变化率${p.alternatingRate})`);
+    return { id: p.id, reasons };
+  });
 
 // ---- Cronbach α（逐维度，n=10，仅作小样本参考） ----
 function cronbachAlpha(scaleKey, domainKey) {
@@ -198,6 +257,12 @@ const out = {
   },
   elapsedSec: elapsedStats,
   patternFlags: patternFlags,
+  anomalySummary: {
+    flaggedCount: anomalous.length,
+    totalCompleted: completed.length,
+    flaggedRate: +(anomalous.length / completed.length).toFixed(3),
+    flagged: anomalous,
+  },
 };
 
 console.log(JSON.stringify(out, null, 2));
