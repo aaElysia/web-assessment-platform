@@ -7,7 +7,10 @@
 //      · 想用问卷：  "https://forms.gle/xxxx"（Google Form）/ 腾讯问卷链接 等
 //  - 默认给一个占位 mailto，部署前请替换为真实地址，否则反馈会发到示例域名。
 
+const feedbackEmail = "xyp123452022@qq.com";
+
 export const SITE_CONFIG = {
-  feedbackUrl: "mailto:xyp123452022@qq.com?subject=心理测评平台反馈",
-  feedbackLabel: "留下反馈",
+  feedbackEmail,
+  feedbackUrl: `mailto:${feedbackEmail}?subject=心理测评平台反馈`,
+  feedbackLabel: "发邮件反馈",
 } as const;

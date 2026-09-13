@@ -51,14 +51,12 @@ export default function HomePage() {
 
       <section className="mt-6 text-center">
         <p className="text-sm text-muted">
-          想告诉我们你的使用感受？
+          想告诉我们你的使用感受？写信到
           <a
             href={SITE_CONFIG.feedbackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className="ml-1 font-medium text-primary hover:underline"
           >
-            {SITE_CONFIG.feedbackLabel}
+            {SITE_CONFIG.feedbackEmail}
           </a>
         </p>
       </section>

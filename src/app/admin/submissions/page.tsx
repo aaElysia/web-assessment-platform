@@ -6,7 +6,7 @@ import { DeleteParticipantButton } from "@/components/admin/DeleteParticipantBut
 import { requireAdminPage } from "@/lib/admin/guard";
 import { loadParticipantsList } from "@/lib/admin/submissions";
 import type { SortDir, SortKey } from "@/lib/admin/types";
-import { cn } from "@/lib/utils";
+import { cn, formatCnDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ function parseSort(sp: Record<string, string | string[] | undefined>): {
 }
 
 function fmt(iso: string): string {
-  return new Date(iso).toLocaleString("zh-CN", { hour12: false });
+  return formatCnDateTime(iso);
 }
 
 function StatusBadge({ row }: { row: { status: string; session: { status: string } | null } }) {

@@ -259,9 +259,6 @@ function ResultInner() {
 
         <AiDomainBar data={barData} />
         <div className="mt-8 border-t border-line pt-6">
-          <p className="mb-3 text-xs text-muted">
-            以下为五个维度的逐项得分（1–5），其中 CN 为反向语义，分数越高表示担忧越多。
-          </p>
           <DomainBreakdown
             domains={aiScale?.domains ?? []}
             colorFor={(k) => barData.find((b) => b.key === k)?.color ?? "#64748b"}
@@ -284,7 +281,7 @@ function ResultInner() {
       {/* ---- 分享与反馈（P0-1 / P1-7） ---- */}
       <Card className="mt-8" title="分享与反馈">
         <p className="text-sm text-muted">
-          觉得有意思？把你的结果链接分享给朋友，或告诉我们你的使用感受。
+          觉得有意思？把你的结果链接分享给朋友，或用邮件告诉我你的使用感受。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button variant="secondary" size="md" onClick={handleCopyLink}>
@@ -292,15 +289,20 @@ function ResultInner() {
           </Button>
           <a
             href={SITE_CONFIG.feedbackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className={buttonClasses("primary", "md")}
           >
             {SITE_CONFIG.feedbackLabel}
           </a>
         </div>
         <p className="mt-3 text-xs text-muted">
-          反馈通过邮件 / 第三方问卷收集，不会与你的作答数据关联。
+          反馈邮箱：
+          <a
+            href={SITE_CONFIG.feedbackUrl}
+            className="ml-1 font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {SITE_CONFIG.feedbackEmail}
+          </a>
+          （邮件方式，不会与你的作答数据关联）
         </p>
       </Card>
 

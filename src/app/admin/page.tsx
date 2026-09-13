@@ -10,6 +10,7 @@ import { IndexHistogram } from "@/components/charts/IndexHistogram";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { loadAdminStats } from "@/lib/admin/load";
 import { MIN_RELIABLE_N, formatDuration } from "@/lib/admin/stats";
+import { formatCnDateTime } from "@/lib/utils";
 import { weakCredentialReasons } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ export default async function AdminDashboardPage() {
   const num = (v: number | null, digits = 2) =>
     v === null ? "—" : v.toFixed(digits);
   const latest = stats.latestCompletedAt
-    ? new Date(stats.latestCompletedAt).toLocaleString("zh-CN", { hour12: false })
+    ? formatCnDateTime(stats.latestCompletedAt)
     : "—";
 
   const stages = [
