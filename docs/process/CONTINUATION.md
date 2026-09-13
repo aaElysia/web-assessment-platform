@@ -21,7 +21,7 @@
 1. **Big Five 人格**（O/C/E/A/N），40 题（每维度 4 正 + 4 反）。
 2. **AI Technology Adoption Attitude Scale**（PU/TR/WA/LA/CN），20 题（每维度 3 正 + 1 反）+ 合成指数。
 
-**当前任务**：完成 Step 1–9 并已验证（见下文）。下一步进入 **Step 10（Deployment）**：Vercel + Neon 部署、env 隔离（**必须替换管理端默认弱凭据与会话密钥**）、上线冒烟测试。Step 9 已交付管理端分析页与三个分析 API，并首次跑通**独立评分交叉验证**（`npm run verify:scoring`）。
+**当前任务**：Step 1–10 全部完成并**已正式部署上线**（公开可用，URL 见 §10 第 13 条）。部署后已完成：心理测量审查 + 评分解释层修正、UX 审查 + 体验修正、管理端提交明细（按填写时间排序 + 逐条删除）、结果页读图提示布局修复、知情同意措辞修正，以及交付物 C/E 文档。**唯一剩余的人工动作是开展真实用户试点（交付物 D，≥10 名独立参与者）**；若此前重置过 Neon 密码，需同步更新 Vercel 的 `DATABASE_URL`（Pooled 串）后 Redeploy。
 
 **管理端鉴权（Step 8 落地，务必延续）**：`src/lib/auth.ts`（纯逻辑：HMAC-SHA256 签名会话 + 常量时间凭据比较）+ `src/lib/admin/guard.ts`（Next 胶水：`guardAdminApi()` / `requireAdminPage()`）。**刻意不用 middleware**——Edge Runtime 拿不到 Node 加密原语，会逼出第二套实现从而产生鉴权分叉。新增管理 API 时**必须**在首行调用 `guardAdminApi(req)`，否则 `guard-coverage.test.ts` 会失败。
 
