@@ -2,8 +2,8 @@
 
 > 用途：让**全新的 AI Agent**（完全不了解之前聊天）读完本文件即可无缝接管本项目。
 > 项目名：`web-assessment-platform` ｜ 位置：`G:\web-assessment-platform`
-> 最后交接状态：开发阶段 **Step 1–10 的代码侧已全部完成并验证**；**Step 7 结果页整页空白的缺陷已修复并补上渲染级守卫**（见 §2「Step 7 修复」）；**Step 9 分析页已落地并首次完成「独立评分交叉验证」**（见 §2「Step 9」与 §8.3）；**Step 10 已完成部署安全加固（生产环境自检 / 密钥泄露扫描 / 安全响应头 / Postgres 派生方案 / `SECURITY.md`）**（见 §2「Step 10」与 §10）；**剩余唯一人工动作：填 Neon 凭据并把项目连到 Vercel**（见 §10 第 13 条）。
-> 时间锚点：2026-09-12（更新于 Step 10 部署安全加固之后）
+> 最后交接状态（**2026-09-13 更新**）：**项目已正式部署并公开可用**（Vercel + Neon，公开 URL 见 §10 第 13 条）。Step 1–10 全部完成并验证；Step 7 结果页整页空白缺陷已修复并补渲染级守卫；Step 9 分析页落地并完成「独立评分交叉验证」；Step 10 部署安全加固 + 上线均已完成。部署后追加了：心理测量审查与评分解释层修正、UX 审查与体验修正、**管理端提交明细（按填写时间排序 + 逐条删除）**、结果页读图提示布局修复、知情同意措辞修正、交付物 C/E 文档。**仅剩真实用户试点（交付物 D）待开展**（见 §10 第 17 条与 §2「部署后补充」）。
+> 时间锚点：2026-09-13（更新于正式部署完成后，同步交付物与文档）
 
 ---
 
@@ -36,9 +36,12 @@
 
 ## 2. 当前已完成的功能
 
-**文档（全部已交付，位于 `docs/`）**
+**文档**
 - `docs/assessment-framework.md` — 心理测量设计（Big Five + AI 量表的维度、题目、Likert、评分方法、验证方案）。**这是评分逻辑的权威来源**。
 - `docs/dev-plan.md` — 目录结构、技术栈对比（已选方案 C）、Sprint 计划与验收标准（DoD）。
+- `docs/AI-DEVELOPMENT-RECORD.md` — **交付物 C**：AI 辅助开发记录（如何使用 agentic AI、AI 犯过的错与纠正）。
+- `docs/TECHNICAL-REPORT.md` — **交付物 E**：技术报告（11 问；含构念、评分、技术栈、部署 URL、试点计划）。
+- `docs/process/` — **过程日志归档**：心理测量审查、UX 审查及对应修复记录，以及本交接文档（CONTINUATION.md）。
 
 **配置驱动题库（已交付且通过结构校验）**
 - `data/question-bank.json` — 60 题完整机器可读定义（Big Five 40 + AI 20）。结构与题目与 `assessment-framework.md` 严格对应，已校验"声明 itemIds == 实际 items"。
@@ -198,9 +201,9 @@
 | 7 | Result Visualization | ✅ 已完成 | 雷达图 + 条形图 + 合成指数 + 配置驱动中性解读；E2E 41 项通过。**曾因题库缺 `scale.type` 导致整页空白，已修复并补 `pipeline.test.ts` / `test:render` 两道守卫** |
 | 8 | Admin Dashboard | ✅ 已完成 | 签名会话鉴权（API 401 / 页面 307）+ 统计仪表盘 + 分布图 + CSV 导出；E2E 93 项通过 |
 | 9 | Analytics | ✅ 已完成 | 分析页（服务端渲染）+ 三个分析 API + α(bootstrap CI)/相关热力图/题项分布 + **独立评分交叉验证**；E2E 164 项通过 |
-| 10 | Deployment | ✅ 代码侧已完成（待接账号） | 生产环境自检（构建期+运行期双层硬拦截）/ 密钥泄露扫描（6 类检查，经探针验证）/ 安全响应头 / 强随机凭据生成 / Postgres 派生方案 / `SECURITY.md`。**仅剩填 Neon 凭据 + Vercel 连接这一人工动作**（见 §10 第 13–14 条） |
+| 10 | Deployment | ✅ 已部署上线（公开可用） | 生产环境自检（构建期+运行期双层硬拦截）/ 密钥泄露扫描（6 类检查，经探针验证）/ 安全响应头 / 强随机凭据生成 / Postgres 派生方案 / `SECURITY.md`。**代码侧与生产配置均完成**；若曾重置 Neon 密码，需同步更新 Vercel `DATABASE_URL`（Pooled 串）后 Redeploy（见 §10 第 13–14 条） |
 
-> Step 9 分析引擎与鉴权均已就位；Steps 10 的加固已全部落地并本地验证。**首次部署前请按 [`SECURITY.md`](SECURITY.md) 执行，不要跳过 `npm run deploy:check`。**
+> Step 9 分析引擎与鉴权均已就位；Step 10 加固已全部落地并**已在 Vercel + Neon 上验证**。**上线前请按 [`SECURITY.md`](../../SECURITY.md) 执行，不要跳过 `npm run deploy:check`。**
 > ⚠️ Step 10 新增了一条**所有管理端 API 都会经过**的部署健康闸门（`guard.ts::deploymentBlockedResponse()`）：生产环境下若凭据或数据库连接不合格，接口一律 503。本地以 `NODE_ENV=production` 预览依赖 `.env` 中的 `ALLOW_INSECURE_DEFAULTS=1`（**该变量绝不可出现在部署平台**）。
 > ⚠️ 新增管理 API 时**必须**首行调用 `guardAdminApi(req)`，否则 `guard-coverage.test.ts` 会失败。
 
@@ -215,7 +218,7 @@
 - ORM/DB：Prisma 5；**本地 SQLite（`file:./dev.db`），生产 PostgreSQL（Neon）**，同 schema 零改代码切换（仅改 provider + `DATABASE_URL`）。
 - 输入校验：Zod 3（已用）。
 - 鉴权：自研轻量方案（不引入外部 IdP）——`ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_SESSION_SECRET` + HMAC-SHA256 签名会话、httpOnly cookie、8 小时有效；无状态、无会话表。
-- 测试：Vitest 2（已配置，**已落地 240 个单测并全绿**（Step 9 收尾 218，Step 10 新增 22：凭据强度规则 7 + 生产环境自检 15）：题库契约 7（含 `type` 硬契约）+ 解读文案完整性 4 + 草稿持久化 7 + 评分 29 + 信度 15 + 相关 22 + 结果视图模型 15 + **结果数据链 6** + 鉴权 35 + 限流 7 + 管理端统计 35（含原始作答导出 / `elapsedSecOf`）+ **管理端分析 32** + 守卫覆盖 4 + 凭据强度规则 7 + 生产环境自检 15）。另有 `test:e2e`(164)、`test:render`(11) 与 `verify:scoring`(8)。
+- 测试：Vitest 2（已配置，**已落地 258 个单测并全绿**（Step 9 收尾 218，Step 10 新增 22，部署后新增 18：提交明细/排序 `submissions.test.ts` 等）：题库契约 7（含 `type` 硬契约）+ 解读文案完整性 4 + 草稿持久化 7 + 评分 29 + 信度 15 + 相关 22 + 结果视图模型 15 + **结果数据链 6** + 鉴权 35 + 限流 7 + 管理端统计 35（含原始作答导出 / `elapsedSecOf`）+ **管理端分析 32** + 守卫覆盖 4 + 凭据强度规则 7 + 生产环境自检 15 + 提交明细/排序 18）。另有 `test:e2e`(164)、`test:render`(11) 与 `verify:scoring`(8)。
 - 三层测试命令：`npm test`（240 单测）、`npm run test:e2e`（**164 项** HTTP 契约断言，含 Step 10 部署安全契约）、`npm run test:render`（**11 项**真实浏览器渲染断言 —— 用**本机** Chrome/Edge 无头模式，专门覆盖「客户端渲染的页面上到底有没有分数」这个盲区）。
 - **Playwright 交互级 E2E 仍未做**：点击选项、表单提交、刷新续答等**交互动作**未验证；渲染结果层已由 `test:render` 覆盖（见 §9 第 8 条）。
 - 部署：Vercel（前端+API 一体）+ Neon Postgres。
@@ -460,13 +463,13 @@ reverse 重编码: recoded = (scale+1) − value = 6 − value   // 仅 reverse:
 ⚠️ **致命坑（务必注意）**：CN（担忧）维度的 CN4 是反向题，已在"维度内重编码"阶段反转为"越高越担忧"。**合成指数里不要再二次反转 CN 原始值**，应直接对 `mean(CN)`（已是担忧维度分）做 `(6 − mean(CN))`。见下。
 ✅ 已在 `computeAiAdoptionIndex()` 中实现并由 CN4 专项测试锁定（`CN1..3=5, CN4=1 → CN=5.0`；`CN1..3=5, CN4=5 → CN=4.0`）。
 
-**2) AI 采纳态度合成指数（Composite Index）** —— JSON 中 `ai_adoption.composite.formula` 为权威公式：
+**2) AI 采纳态度合成指数（Composite Index）** —— JSON 中 `ai_adoption.composite.formula` 为权威公式（**实际实现见 `src/lib/scoring/score.ts::computeAiAdoptionIndex`，下述口径与之严格一致**）：
 ```
-positive_avg = mean(PU, TR, WA, LA)        // 各维度分均值
-concern_score = mean(CN)                    // CN 维度分（已含 CN4 反向重编码，越高=越担忧）
-AI_Adoption_Index = ( positive_avg + (6 − concern_score) ) / 2   // 范围 1–5，越高=采纳态度越积极
+concern_score = mean(CN)                    // CN 维度分（已含 CN4 题目级反向重编码，越高=越担忧）
+AI_Adoption_Index = ( PU + TR + WA + LA + (6 − concern_score) ) / 5
+                 = mean( PU, TR, WA, LA, 6 − concern_score )   // 五域算术平均，每域权重 0.20
 ```
-权重为**等权**（已在文档声明不作未验证权重声称）。
+即五个域（PU/TR/WA/LA 正向 + 域级翻正的 CN）**等权**算术平均，范围 1–5，越高=采纳态度越积极。权重为**等权**（已在文档声明不作未验证权重声称）。
 
 **3) 信度 Cronbach α**（每维度/每量表，逐被试×逐题矩阵）：
 ```
@@ -733,7 +736,7 @@ total_var = variance(被试总分)
 - **基础组件复用**：页面统一使用 `src/components/ui/*`（Container/Card/Button/ProgressBar/Alert/Badge/LikertScale 等），不要各页重复造样式。
 - **题目标识契约**：客户端与 API 之间一律用题目 **`code`**（如 `O1`）作为题目标识（`GET /api/questionnaire` 的 items 输出 `code`；`POST /api/responses` 的 `itemId` 即 code，后端再解析为 `Item.id`）。切勿让前端提交数据库 cuid。
 - **草稿存储键约定**：`wap_participant_id`（当前参与者）、`wap_draft_<pid>`（该参与者草稿，含 `answers`/`demographics`/`updatedAt`）。改键名会使老草稿失联。
-- **评分口径不可变**：反向重编码 `6 − value`、维度分 = recoded 均值、缺失 ≤1 填补 / >1 判 incomplete、合成指数 `(mean(PU,TR,WA,LA) + (6 − mean(CN)))/2`、分带阈值 (2.5 / 3.5)。改动会同时破坏 **218 个单测**、**139 项 E2E**、**11 项渲染断言**与 `verify:scoring` 的逐格对账。
+- **评分口径不可变**：反向重编码 `6 − value`、维度分 = recoded 均值、缺失 ≤1 填补 / >1 判 incomplete、合成指数 `(PU + TR + WA + LA + (6 − mean(CN)))/5`（五域等权，每域 0.20）、分带阈值 (2.5 / 3.5)。改动会同时破坏 **258 个单测**、**164 项 E2E**、**11 项渲染断言**与 `verify:scoring` 的逐格对账。
 - **数值输出约定**：引擎内部全精度，对外 `round(x, 4)`；`incomplete` → `score=null` + `band=null`；合成指数不可部分合成。
 - **图表库用 Recharts**（已在 dependencies，Step 7 起使用），不引入其它图表库；配色复用 `dimension-*` / `ai-*` 令牌。
 - **顶栏导航去重规则**（Step 6 用户反馈）：`SiteHeader` 保持路由自适应——首页不重复主 CTA，管理端页面不出现前台流程链接；新增页面时沿用此规则，不要把同一入口同时放在顶栏与页面 hero 里。
