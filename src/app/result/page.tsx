@@ -259,9 +259,6 @@ function ResultInner() {
 
         <AiDomainBar data={barData} />
         <div className="mt-8 border-t border-line pt-6">
-          <h3 className="mb-1 text-sm font-semibold text-slate-800">
-            各维度明细分数
-          </h3>
           <p className="mb-3 text-xs text-muted">
             以下为五个维度的逐项得分（1–5），其中 CN 为反向语义，分数越高表示担忧越多。
           </p>
