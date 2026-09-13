@@ -1,7 +1,9 @@
 # Web 心理测评平台 (Web Assessment Platform)
 
-> Agentic AI Web Assessment Challenge 项目
+> Agentic AI Web Assessment Challenge 参赛项目
 > 匿名心理测评平台：Big Five 人格 + AI 技术采纳态度。教育 / 自我洞察用途，**非临床诊断**。
+
+**English abstract.** An anonymized web assessment platform that measures two constructs — the Big Five personality traits (40 items) and attitudes toward AI adoption (20 items, including a reverse-coded concern dimension) — via a 60-item, 5-point Likert questionnaire. It auto-scores responses, renders interactive result visualizations, stores data for aggregate analysis, and ships a researcher admin dashboard (reliability / correlation analysis, CSV export, submission management). Built with Next.js 14 + Prisma, deployed on Vercel + Neon, and developed throughout with an agentic AI coding assistant. Live app: `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` · Source: `https://github.com/aaElysia/web-assessment-platform`.
 
 ## 技术栈
 
@@ -27,7 +29,10 @@ prisma/         schema / seed / migrations / dev.db
 scripts/        e2e-results.mjs（HTTP 契约测试） smoke-render.mjs（真实浏览器渲染冒烟）
                 verify-scoring.mjs（独立评分交叉验证） stop-dev.ps1（清理残留服务器）
 verify-output/  交叉验证产出的对账表（crosscheck-*.csv，自动生成）
-docs/           assessment-framework.md / dev-plan.md / 后续技术报告与 AI 开发记录
+docs/           assessment-framework.md（评分逻辑权威规格） dev-plan.md（架构与技术选型）
+                AI-DEVELOPMENT-RECORD.md（交付物 C：AI 辅助开发记录）
+                TECHNICAL-REPORT.md（交付物 E：技术报告）
+                process/（评审与修复过程日志，供追溯）
 readlink-polyfill.cjs  见下方"Windows 注意事项"
 ```
 
@@ -124,7 +129,7 @@ ADMIN_SESSION_SECRET="dev-only-secret-change-me"   # 生产 ≥32 位随机值
 ## 测试
 
 ```bash
-npm test                     # Vitest 单测（240 项）
+npm test                     # Vitest 单测（258 项）
 BASE_URL=http://localhost:3000 npm run test:e2e      # HTTP 契约测试（164 项断言，需先启动服务）
 BASE_URL=http://localhost:3000 npm run test:render   # 真实浏览器渲染冒烟（11 项断言，需先启动服务）
 BASE_URL=http://localhost:3000 npm run verify:scoring # 独立评分交叉验证（需先启动服务）
@@ -162,19 +167,29 @@ Bonferroni、题项计数守恒、`format=raw`）。
 
 该补丁在 macOS / Linux / Vercel 等正常文件系统上为**空操作**（readlink 本就正常，不会触发转译），可安全保留。
 
-## 开发进度
+## 项目状态与交付物
 
-- [x] Step 1 初始化项目（依赖 / 构建 / dev 启动 / 测试基座）
-- [x] Step 2 数据库（Prisma schema + 迁移 + 题库 seed）
-- [x] Step 3 用户端后端 API（participants / consent / questionnaire / responses）
-- [x] Step 4 前端 UI（设计令牌 + 基础组件库 + 页面骨架）
-- [x] Step 5 问卷（Consent 门槛 / 进度条 / 草稿续答 / 提交）
-- [x] Step 6 评分引擎（纯函数 + 单测 + `/api/results/:pid`）
-- [x] Step 7 结果可视化（雷达图 / 条形图 / 合成指数 / 配置驱动中性解读）
-- [x] Step 8 管理端仪表盘（签名会话鉴权 / 统计与分布 / CSV 导出）
-- [x] Step 9 分析（Cronbach α + bootstrap 区间 / Pearson 相关热力图 / 题项分布 / 独立交叉验证）
-- [ ] Step 10 部署（Vercel + Neon）
+**部署状态：已正式部署并可公开访问。** 生产环境运行于 Vercel（前端 + 函数）与 Neon（PostgreSQL），构建自检（`deploy:check`：密钥审计 → 生产环境自检 → 类型检查 → 单测）通过后方可上线。
 
-> 交接文档见 `CONTINUATION.md`（含当前状态、评分口径、锁定决策与下一步清单）。
-> 设计文档见 `docs/`（`assessment-framework.md` 为评分逻辑权威来源）。
+### 挑战赛交付物索引（Deliverables）
+
+| 交付物 | 内容 | 位置 / 链接 |
+|---|---|---|
+| **A. 已部署应用** | 可公开访问的测评平台 | `https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app` |
+| **B. 源代码** | 完整仓库（含 README、测试、部署配置） | `https://github.com/aaElysia/web-assessment-platform` |
+| **C. AI 开发记录** | 如何用 agentic AI 开发、AI 犯过的错与纠正 | `docs/AI-DEVELOPMENT-RECORD.md` |
+| **D. 真实用户试点** | ≥10 名独立参与者的完成与反馈分析 | ⏳ 待完成（计划方法见 `docs/TECHNICAL-REPORT.md` §7） |
+| **E. 技术报告** | 11 问技术报告 | `docs/TECHNICAL-REPORT.md` |
+
+> 设计文档见 `docs/`：`assessment-framework.md` 为评分逻辑权威来源，`dev-plan.md` 记录架构与技术选型。
+> 评审与修复的**过程日志**归档于 `docs/process/`（含心理测量审查、UX 审查及对应修复记录），`CONTINUATION.md` 亦移入该目录，供需要追溯历史决策的读者查阅。
+
+### 已实现的核心功能
+
+- **知情同意**：用途 / 匿名（不收 PII）/ 数据用途 / 存储保留四要素披露 + 非诊断声明。
+- **交互式问卷**：60 题（大五 40 + AI 态度 20），5 点 Likert，含 29 道反向题；进度条、草稿续答、吸顶导航。
+- **评分引擎**：配置驱动的纯函数评分（反向重编码、缺失策略、分带、Cronbach's α、Pearson 相关、等权探索性合成指数）。
+- **结果页**：雷达图、条形图、逐维度明细、中性化解读与免责声明。
+- **数据收集**：匿名参与者 + 会话 + 逐题作答三层模型（Prisma，SQLite 本地 / Postgres 生产）。
+- **管理后台**：签名会话鉴权；仪表盘（参与量 / 完成率 / 维度均值·sd / 合成指数分布）；分析（α + bootstrap 区间 / 相关热力图 / 题项反应分布）；CSV 导出；**提交明细（按填写时间排序 + 逐条删除，应对测试期数据污染）**。
 

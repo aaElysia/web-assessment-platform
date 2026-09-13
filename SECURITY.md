@@ -177,7 +177,7 @@ curl -s https://<你的域名>/admin | grep -c "ADMIN_PASSWORD\|ADMIN_SESSION_SE
    人为延迟反而放大被攻击时的计费成本）。
    **结论：把限流交给 Vercel 平台侧，应用内限流只作为抬高脚本成本的兜底。**
 2. **CSP 仍含 `'unsafe-inline'`**（`script-src`）。要收掉需为每次请求生成 nonce 并贯穿
-   所有内联脚本，属于独立改造项，已记入 `CONTINUATION.md §11 待收紧项`。
+   所有内联脚本，属于独立改造项，已记入 `docs/process/CONTINUATION.md §11 待收紧项`。
 3. **会话无法服务端主动吊销**。无状态签名令牌的固有取舍：只能通过轮换
    `ADMIN_SESSION_SECRET` 让全部会话同时失效（这也是泄露后必做的动作）。
 4. **审计工具只能反查它见过的值**。`audit:secrets` 反查的是本地 `.env*` 中的真实值；
