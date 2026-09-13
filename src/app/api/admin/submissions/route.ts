@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
  *
  * 提交明细列表。需要有效管理端会话，否则 401。
  * 支持查询参数：
- *  - sort：submittedAt（默认）| startedAt | createdAt
+ *  - sort：submittedAt（默认）| createdAt
  *  - dir ：desc（默认）| asc
  * 与「提交明细」页共用 `loadParticipantsList()`，保证页面与 API 数字一致。
  */
-const VALID_KEYS: SortKey[] = ["submittedAt", "startedAt", "createdAt"];
+const VALID_KEYS: SortKey[] = ["submittedAt", "createdAt"];
 const VALID_DIRS: SortDir[] = ["asc", "desc"];
 
 export async function GET(req: Request) {

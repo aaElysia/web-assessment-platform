@@ -60,7 +60,7 @@ export type ParticipantRow = {
 };
 
 /** 可排序的时间字段。 */
-export type SortKey = "submittedAt" | "startedAt" | "createdAt";
+export type SortKey = "submittedAt" | "createdAt";
 /** 排序方向。 */
 export type SortDir = "asc" | "desc";
 
@@ -72,8 +72,8 @@ export type ListParticipantsOptions = {
 /**
  * 纯函数：按指定时间字段对提交明细排序。
  * - submittedAt：恒有值，直接比较；
- * - startedAt：会话可能为 null，null 一律排到末尾（与方向无关）；
  * - createdAt：恒有值，直接比较。
+ * 两个字段均不会出现 null，故不再需要 null 垫底逻辑。
  * 不修改入参（返回新数组）。
  */
 export function sortParticipantRows(
@@ -82,20 +82,11 @@ export function sortParticipantRows(
   dir: SortDir
 ): ParticipantRow[] {
   const factor = dir === "asc" ? 1 : -1;
-  const pick = (r: ParticipantRow): string | null => {
-    if (key === "submittedAt") return r.submittedAt;
-    if (key === "startedAt") return r.session?.startedAt ?? null;
-    return r.createdAt;
-  };
+  const pick = (r: ParticipantRow): string =>
+    key === "submittedAt" ? r.submittedAt : r.createdAt;
   return [...rows].sort((a, b) => {
-    const va = pick(a);
-    const vb = pick(b);
-    // null（无会话的 startedAt）永远垫底，无论升序降序
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    const ta = new Date(va).getTime();
-    const tb = new Date(vb).getTime();
+    const ta = new Date(pick(a)).getTime();
+    const tb = new Date(pick(b)).getTime();
     return (ta - tb) * factor;
   });
 }

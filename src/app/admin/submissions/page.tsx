@@ -10,10 +10,9 @@ import { cn, formatCnDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const VALID_KEYS: SortKey[] = ["submittedAt", "startedAt", "createdAt"];
+const VALID_KEYS: SortKey[] = ["submittedAt", "createdAt"];
 const KEY_LABEL: Record<SortKey, string> = {
   submittedAt: "提交时间",
-  startedAt: "开始时间",
   createdAt: "创建时间",
 };
 

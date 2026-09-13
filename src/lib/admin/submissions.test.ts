@@ -30,7 +30,7 @@ describe("sortParticipantRows", () => {
     session: { startedAt: "2026-01-02T09:30:00.000Z", completedAt: "2026-01-02T10:00:00.000Z", status: "completed", itemCount: 60 },
   });
   const c = row({
-    id: "c", // 无会话：startedAt 为 null
+    id: "c", // 无会话
     submittedAt: "2026-01-03T10:00:00.000Z",
     createdAt: "2026-01-03T09:00:00.000Z",
     session: null,
@@ -44,18 +44,6 @@ describe("sortParticipantRows", () => {
   it("submittedAt 升序，最旧在顶部", () => {
     const out = sortParticipantRows([c, b, a], "submittedAt", "asc");
     expect(out.map((r) => r.id)).toEqual(["a", "b", "c"]);
-  });
-
-  it("startedAt 排序时，无会话(null)永远垫底，与方向无关", () => {
-    const desc = sortParticipantRows([c, a, b], "startedAt", "desc");
-    expect(desc[desc.length - 1].id).toBe("c");
-    const asc = sortParticipantRows([c, a, b], "startedAt", "asc");
-    expect(asc[asc.length - 1].id).toBe("c");
-  });
-
-  it("startedAt 降序：有会话的按开始时间倒序", () => {
-    const out = sortParticipantRows([a, b, c], "startedAt", "desc");
-    expect(out.map((r) => r.id)).toEqual(["b", "a", "c"]);
   });
 
   it("createdAt 排序（恒有值）按创建时间升降", () => {
