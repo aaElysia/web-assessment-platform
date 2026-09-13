@@ -46,6 +46,7 @@ function ResultInner() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   const load = useCallback(async (id: string) => {
     setLoading(true);
@@ -71,6 +72,16 @@ function ResultInner() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+    }
+  }
+
+  async function handleCopyEmail() {
+    try {
+      await navigator.clipboard.writeText(SITE_CONFIG.feedbackEmail);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    } catch {
+      setEmailCopied(false);
     }
   }
 
@@ -281,7 +292,7 @@ function ResultInner() {
       {/* ---- 分享与反馈（P0-1 / P1-7） ---- */}
       <Card className="mt-8" title="分享与反馈">
         <p className="text-sm text-muted">
-          觉得有意思？把你的结果链接分享给朋友，或用邮件告诉我你的使用感受。
+          觉得有意思？把你的结果链接分享给朋友；或发邮件告诉我你的使用感受。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button variant="secondary" size="md" onClick={handleCopyLink}>
@@ -293,6 +304,9 @@ function ResultInner() {
           >
             {SITE_CONFIG.feedbackLabel}
           </a>
+          <Button variant="ghost" size="md" onClick={handleCopyEmail}>
+            {emailCopied ? "邮箱已复制 ✓" : "复制邮箱"}
+          </Button>
         </div>
         <p className="mt-3 text-xs text-muted">
           反馈邮箱：
@@ -302,7 +316,7 @@ function ResultInner() {
           >
             {SITE_CONFIG.feedbackEmail}
           </a>
-          （邮件方式，不会与你的作答数据关联）
+          （邮件方式，不会与你的作答数据关联；若点击按钮未唤起邮件客户端，可复制邮箱手动发送）
         </p>
       </Card>
 

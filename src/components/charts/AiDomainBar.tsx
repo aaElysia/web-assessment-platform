@@ -24,9 +24,9 @@ export function AiDomainBar({ data }: { data: BarPoint[] }) {
   if (data.length === 0) return null;
 
   return (
-    <div className="h-[260px] w-full">
+    <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 16, right: 8, bottom: 0, left: -18 }}>
+        <BarChart data={data} margin={{ top: 16, right: 8, bottom: 28, left: -18 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
           <XAxis
             dataKey="key"
@@ -67,8 +67,20 @@ export function AiDomainBar({ data }: { data: BarPoint[] }) {
       </ResponsiveContainer>
 
       {/* 读图提示：独立成框，避免与下方逐维度分数列表视觉粘连 */}
-      <div className="mt-4 rounded-lg border border-line bg-slate-50 px-3 py-2.5">
-        <p className="text-xs leading-relaxed text-muted">
+      <div className="mt-6 flex gap-2 rounded-lg border border-slate-200 border-l-2 border-l-slate-400 bg-slate-50 px-3.5 py-3">
+        <svg
+          className="mt-0.5 h-4 w-4 shrink-0 text-slate-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 11-2 0 1 1 0 012 0zm-1 3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <p className="text-xs leading-relaxed text-slate-600">
           <span className="font-medium text-slate-700">读图提示：</span>
           PU 感知有用性 / TR 信任 / WA 采纳意愿 / LA 学习态度 —— 数值越高越积极；
           <span className="font-medium text-red-600">CN 对 AI 的担忧为反向语义，数值越高表示担忧越多</span>

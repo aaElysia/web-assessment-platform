@@ -35,3 +35,6 @@ prisma/schema.generated.*.prisma
 
 # 交叉验证产出的对账表（每次运行都会重新生成）
 verify-output/
+
+# WorkBuddy 代理内部目录（记忆 / 任务状态等，非项目交付物）
+.workbuddy/

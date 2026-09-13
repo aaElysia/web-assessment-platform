@@ -183,8 +183,17 @@
   - 实测：**96 名参与者 / 1056 个数值逐格一致（容差 1e-4）**，抽样结果页一致，8/8 断言通过。
   - 为什么必须重写实现：若两边共用同一份代码，「验证」就退化成「用程序的结果验证程序」，口径整体错掉也照样全绿。唯一共享的是**题库配置**（题目归属与反向标记属「数据」而非「实现」）。
 - 测试（**新增 46，总数达 218**）：`analysis.test.ts`(32：α 无定义/null 语义、**负 α 如实返回**、listwise 剔除计数、bootstrap 同种子可复现、相关对称性与 Bonferroni、**计数守恒**、**反向题不因原始分被误报为地板效应**)、`stats.test.ts` 新增原始导出与 `elapsedSecOf`(6)。E2E 93 → **139 项断言**（新增 [11] 分析契约 46 项）。
-- 验证结果：typecheck 绿；`npm test` **240/240**（Step 9 收尾 218，Step 10 新增 22）；`npm run build` 通过；E2E **164/164**（Step 10 新增 28 项部署安全契约）；`test:render` **11/11**；`verify:scoring` **8/8**（1056 个数值一致）。
+- 验证结果：typecheck 绿；`npm test` **240/240**（Step 9 收尾 218，Step 10 新增 22；**当前全量 258，含部署后新增 18，见 §4**）；`npm run build` 通过；E2E **164/164**（Step 10 新增 28 项部署安全契约）；`test:render` **11/11**；`verify:scoring` **8/8**（1056 个数值一致）。
 - ⚠️ **当前库内含大量 E2E 制造的测试数据**（全 3 分、全 5 分、只答单维度等），因此分析页上的 α 与相关数值**不具实质心理测量学意义**（会看到 α 极低甚至为负、维度间相关接近 0）。要看真实结果需先清库（`npm run db:reset`）再收集真人数据。
+
+**部署后补充（2026-09-13，已验证）**
+- **两轮只读专家审查**：先以「心理测量算法审查专家」角色审查评分系统（结论：计算层正确，仅解释/呈现层有 P1–P9 问题），再以「UX Designer」角色审查 Consent / 问卷 / 结果 / 管理四端（P0–P1）。两轮都**先只读出报告、不改代码**，确认清单后再按优先级落地，且只动体验/解释层、不动计算层。
+- **评分解释层修正（仅呈现，不动计算）**：分带改为「相对量表中点 3.0」的中性表述；CN 保留为独立反向语义维度；AI 合成指数由"得分"降级为明确标注的「等权探索性指数」（五域算术平均 /5，每域权重 0.20）；结果 API 增加 `qualityFlags`（直线作答 / 低区分度粗筛，仅提示不计分）；管理端分析页补充"AI 子维度仅 4 题、α 易偏低"的局限说明。
+- **UX 修正**：结果页"读图提示"改为带边框浅底的独立提示框，并与逐维度分数列表间加分隔线拉开间距（避免与分数粘连）；移动端 Likert 显示缩写标签 + 44px 点击热区；问卷页加"保存并稍后继续"CTA、回到顶部悬浮按钮、吸顶"去提交"入口；新增零后端反馈入口（`mailto` + 第三方表单，见 `src/lib/site-config.ts`）。
+- **管理端提交明细（新增）**：`/admin/submissions` 列出每条提交（填写时间 / 状态 / 题数 / 匿名 ID / 操作），支持按时间排序（默认提交时间倒序），每行带删除按钮（二次确认后级联删除该参与者的全部作答）。**专为测试期反复提交污染聚合统计而做**（见 §5、§6 与 §10 第 13 条）。
+- **知情同意措辞修正**：原"提交后无法自行删除单条记录"与管理端可删除功能矛盾，已改为"参与者可经反馈渠道申请删除、管理员可在管理端随时删除任意提交"。
+- **交付物 C/E 文档完成**：`docs/AI-DEVELOPMENT-RECORD.md`、`docs/TECHNICAL-REPORT.md` 已按挑战赛要求撰写（技术报告第 7 问如实标注试点 D 尚未开展）。
+- **⚠️ 剩余：真实用户试点（交付物 D）**：尚无 ≥10 名独立参与者完成的证据；反馈机制（`site-config.ts` 已配真实反馈邮箱 + 结果页"留下反馈"入口）已就绪，待部署稳定后招募。
 
 ---
 
@@ -219,7 +228,7 @@
 - 输入校验：Zod 3（已用）。
 - 鉴权：自研轻量方案（不引入外部 IdP）——`ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_SESSION_SECRET` + HMAC-SHA256 签名会话、httpOnly cookie、8 小时有效；无状态、无会话表。
 - 测试：Vitest 2（已配置，**已落地 258 个单测并全绿**（Step 9 收尾 218，Step 10 新增 22，部署后新增 18：提交明细/排序 `submissions.test.ts` 等）：题库契约 7（含 `type` 硬契约）+ 解读文案完整性 4 + 草稿持久化 7 + 评分 29 + 信度 15 + 相关 22 + 结果视图模型 15 + **结果数据链 6** + 鉴权 35 + 限流 7 + 管理端统计 35（含原始作答导出 / `elapsedSecOf`）+ **管理端分析 32** + 守卫覆盖 4 + 凭据强度规则 7 + 生产环境自检 15 + 提交明细/排序 18）。另有 `test:e2e`(164)、`test:render`(11) 与 `verify:scoring`(8)。
-- 三层测试命令：`npm test`（240 单测）、`npm run test:e2e`（**164 项** HTTP 契约断言，含 Step 10 部署安全契约）、`npm run test:render`（**11 项**真实浏览器渲染断言 —— 用**本机** Chrome/Edge 无头模式，专门覆盖「客户端渲染的页面上到底有没有分数」这个盲区）。
+- 三层测试命令：`npm test`（**258 单测**）、`npm run test:e2e`（**164 项** HTTP 契约断言，含 Step 10 部署安全契约）、`npm run test:render`（**11 项**真实浏览器渲染断言 —— 用**本机** Chrome/Edge 无头模式，专门覆盖「客户端渲染的页面上到底有没有分数」这个盲区）。
 - **Playwright 交互级 E2E 仍未做**：点击选项、表单提交、刷新续答等**交互动作**未验证；渲染结果层已由 `test:render` 覆盖（见 §9 第 8 条）。
 - 部署：Vercel（前端+API 一体）+ Neon Postgres。
 
@@ -250,7 +259,10 @@ SQLite(dev) / Postgres(prod)
 G:\web-assessment-platform\
 ├── docs/
 │   ├── assessment-framework.md   # 测评内容设计（评分逻辑权威源）
-│   └── dev-plan.md               # 目录/技术栈/Sprint/DoD
+│   ├── dev-plan.md               # 目录/技术栈/Sprint/DoD
+│   ├── AI-DEVELOPMENT-RECORD.md  # 交付物 C：AI 辅助开发记录
+│   ├── TECHNICAL-REPORT.md       # 交付物 E：技术报告（11 问）
+│   └── process/                  # 过程日志归档（审查/修复记录 + CONTINUATION.md）
 ├── data/
 │   ├── question-bank.json        # 配置驱动题库（60 题，单一事实源）
 │   └── interpretations.json      # 解读文案（维度 × 分带，Step 7；改文案不动代码）
@@ -271,6 +283,7 @@ G:\web-assessment-platform\
 │   │   ├── admin/page.tsx        # ★ 仪表盘（服务端聚合 + 图表 + 明细表，Step 8）
 │   │   ├── admin/analytics/page.tsx  # 分析页（已加守卫；α/相关/题项数据待 Step 9）
 │   │   ├── admin/export/page.tsx # ★ 导出页（列出全部导出列 + 下载入口）
+│   │   ├── admin/submissions/page.tsx # ★ 提交明细页（按填写时间排序 + 逐条删除，部署后新增）
 │   │   └── api/
 │   │       ├── participants/route.ts   # POST 匿名参与者
 │   │       ├── consent/route.ts        # POST 记录同意
@@ -285,7 +298,9 @@ G:\web-assessment-platform\
 │   │           ├── export/route.ts     # GET CSV 导出（format=csv 维度分 / format=raw 逐题原始分；注入防护 + BOM）
 │   │           ├── reliability/route.ts # ★ GET 信度 α + bootstrap CI（Step 9）
 │   │           ├── correlation/route.ts # ★ GET Pearson r 矩阵 + Bonferroni（Step 9）
-│   │           └── items/route.ts      # ★ GET 题项反应分布（Step 9）
+│   │           ├── items/route.ts      # ★ GET 题项反应分布（Step 9）
+│   │           ├── submissions/route.ts # ★ GET 提交明细列表（guardAdminApi，按 sort/dir 排序，部署后新增）
+│   │           └── submissions/[pid]/route.ts # ★ DELETE 级联删除某参与者全部作答（部署后新增）
 │   ├── lib/
 │   │   ├── db.ts                 # Prisma 单例
 │   │   ├── utils.ts              # cn() 类名合并
@@ -303,7 +318,8 @@ G:\web-assessment-platform\
 │   │   │   ├── stats.test.ts     # 聚合/缺失语义/CSV 注入/原始导出测试（35）
 │   │   │   ├── analysis.ts       # ★ 分析聚合（纯函数：α+bootstrap / 相关 / 题项分布，Step 9）
 │   │   │   ├── analysis.test.ts  # ★ 分析测试（32：null 语义 / 负 α / 可复现 / 计数守恒）
-│   │   │   └── load.ts           # 取数（server-only，Prisma；loadAdminAnalysis 一次算齐三份）
+│   │   │   ├── load.ts           # 取数（server-only，Prisma；loadAdminAnalysis 一次算齐三份）
+│   │   │   └── submissions.ts   # 提交明细取数（server-only；loadParticipantsList + 排序纯函数，部署后新增）
 │   │   ├── auth.test.ts          # 鉴权测试（35：验签/篡改/过期/常量时间/弱凭据/cookie）
 │   │   ├── questionnaire/
 │   │   │   ├── loader.ts         # 题库 + 解读文案加载（公开输出 code）
@@ -342,7 +358,8 @@ G:\web-assessment-platform\
 │       ├── admin/                # ★ 管理端组件（Step 8–9）
 │       │   └── AlphaTable.tsx    # ★ 信度表（α / bootstrap CI / k / n / 剔除 / 题目平均相关）
 │       │   ├── StatCard.tsx  DomainStatsTable.tsx
-│       │   └── AdminLoginForm.tsx (client)  AdminLogoutButton.tsx (client)
+│       │   ├── AdminLoginForm.tsx (client)  AdminLogoutButton.tsx (client)
+│       │   └── DeleteParticipantButton.tsx (client)  # 提交明细删除按钮（部署后新增）
 │       └── result/
 │           └── DomainBreakdown.tsx  # 维度明细（分数+分带+解读）
 ├── scripts/
@@ -407,10 +424,14 @@ G:\web-assessment-platform\
 | `src/lib/admin/types.ts` | 无依赖纯类型（客户端组件可安全 `import type`，避免拖入 `node:fs`）；含分析结果类型 `AlphaRow`/`CorrelationResult`/`ItemRow` 等 | ✅ 已建 |
 | `src/app/api/admin/{login,logout,session,stats,export}/route.ts` | 管理端 API：登录（限流/统一 401/503）、登出（幂等）、会话探针（200 + authenticated:false）、统计、CSV 导出（`csv`/`raw`，其它 → 400） | ✅ 已建+验证 |
 | `src/app/api/admin/{reliability,correlation,items}/route.ts` | **Step 9 分析 API**：均首行 `guardAdminApi`（漏加则 `guard-coverage.test.ts` 失败），与页面共用 `analysis.ts`，保证两处数字一致 | ✅ 已建+验证 |
+| `src/app/api/admin/submissions/route.ts` · `[pid]/route.ts` | **提交明细 API（部署后新增）**：`GET` 列表（按 `sort`/`dir` 排序，均调 `guardAdminApi`）+ `DELETE` 级联删除某参与者全部作答；`guard-coverage.test.ts` 已自动要求 | ✅ 已建+验证 |
 | `src/app/admin/page.tsx` | **仪表盘**：指标卡 + 完成漏斗 + 维度均值图 + 指数直方图 + 逐维 n/sd 明细表 + 弱凭据红警 + 口径说明 | ✅ 已完成 |
 | `src/app/admin/login/page.tsx` | 登录页：服务端判会话（已登录跳 `/admin`）+ 客户端表单（401/429/503 分别提示） | ✅ 已完成 |
 | `src/app/admin/export/page.tsx` | 导出页：列出将导出的全部列 + 下载入口 + 隐私/注入/BOM 说明 | ✅ 已完成 |
 | `src/app/admin/analytics/page.tsx` | **分析页（Step 9 完成）**：服务端聚合 → 概览指标卡 + 警示 + α 表 + 相关热力图 + 题项分布折叠区 + 口径/限制/独立复核入口 | ✅ 已完成 |
+| `src/app/admin/submissions/page.tsx` | **提交明细页（部署后新增）**：列出每条提交（填写时间/状态/题数/匿名 ID/操作），默认按提交时间倒序，支持按时间排序；每行带删除按钮 | ✅ 已完成 |
+| `src/components/admin/DeleteParticipantButton.tsx` | 删除按钮（client）：二次确认后 `DELETE /api/admin/submissions/:pid` 并 `router.refresh()` | ✅ 已完成 |
+| `src/lib/admin/submissions.ts` | 提交明细取数（server-only）：`loadParticipantsList()` + 排序纯函数 | ✅ 已完成 |
 | `readlink-polyfill.cjs` | **构建修复**：EISDIR→EINVAL；须保留且被 dev/build/start 预加载 | 已建（勿删） |
 | `src/lib/utils.ts` | `cn()` 类名合并工具（无第三方依赖） | 已建 |
 | `src/components/ui/*` | 基础组件：Container/Card/Button/ProgressBar/Alert/Badge/SectionHeading/LikertScale(client)/SiteHeader/AdminNav | 已建 |
@@ -420,7 +441,7 @@ G:\web-assessment-platform\
 | `src/app/consent/page.tsx` | 知情同意**真实门槛**：勾选→建参与者→记录同意→跳转 `/assessment` | 已完成 |
 | `src/app/assessment/page.tsx` | 作答页：真实题库(60)+进度条+草稿续答+可选人口学+提交 | 已完成 |
 | `src/app/result/page.tsx` | 结果报告页：`?pid` → `GET /api/results/:pid`，雷达图 + 条形图 + 合成指数 + 中性解读 + 边界说明 | 已完成（Step 7 重写） |
-| `src/app/admin/*` | 管理端四页：**仪表盘/登录/导出（Step 8）、分析页（Step 9）均已完成** | ✅ 完成 |
+| `src/app/admin/*` | 管理端五页：**仪表盘/登录/导出（Step 8）、分析页（Step 9）、提交明细（部署后新增）均已完成** | ✅ 完成 |
 
 ---
 
@@ -570,7 +591,7 @@ total_var = variance(被试总分)
 5. **（已修）题库 JSON 的 `composite` 缺 `label` 字段**：`loader.ts` 的类型声明为 `{ label: string; formula }`，但 JSON 实际只有 `key/formula/range/weighting` → 运行时 `label` 为 undefined。已修正 loader 类型为 `{ key; label?; formula; range?; weighting? }` 并给 JSON 补中文 `label`。
 6. **`.env.local` 缺失**：仅 `.env`（已被 gitignore 忽略，本地用）与 `.env.example` 存在，生产用强随机 `ADMIN_SESSION_SECRET` 与密码。
 7. **小样本不稳定**：试点 n 小，α/相关波动大，报告须如实标注样本量与置信区间，不得夸大。`pearsonPValue` 已实现，但**不得单独解读显著性**——必须同时展示 n。
-8. **（部分缓解）测试覆盖**：现有 **218 个单测 + 139 项 E2E + 11 项渲染冒烟 + 8 项独立交叉验证**。**渲染结果层已覆盖**（`npm run test:render` 用本机 Chrome/Edge 无头模式，断言维度名/分数/图表确实出现在页面上）；**数值正确性已由独立实现复核**（`npm run verify:scoring`，见 §8.3）。**仍未覆盖的是"交互动作"**——点击选项、刷新续答、登录表单提交等只在单测/HTML 外壳层面验证（`agent-browser` 需约 500MB Chromium，未安装）。建议 Step 10 补 Playwright 交互 E2E。
+8. **（部分缓解）测试覆盖**：现有 **258 个单测 + 164 项 E2E + 11 项渲染冒烟 + 8 项独立交叉验证**。**渲染结果层已覆盖**（`npm run test:render` 用本机 Chrome/Edge 无头模式，断言维度名/分数/图表确实出现在页面上）；**数值正确性已由独立实现复核**（`npm run verify:scoring`，见 §8.3）。**仍未覆盖的是"交互动作"**——点击选项、刷新续答、登录表单提交等只在单测/HTML 外壳层面验证（`agent-browser` 需约 500MB Chromium，未安装）。建议 Step 10 补 Playwright 交互 E2E。
 9. **（已修复·环境）残留 dev 服务器累积**：此前用 `(npm run dev &)` 启动导致进程孤儿化，且 Git Bash 的 `pkill` 在 Windows 拿不到其它会话进程，累积达 **7 个**。修复 = `npm run dev:stop`（`scripts/stop-dev.ps1`，只杀监听本项目端口的 node 进程）。**后续请优先用可管理的后台任务方式启动，或启动后主动 `dev:stop` 收尾。**
    - **⚠️ 二次修复（Step 8）**：初版只用 `Get-NetTCPConnection` 探测，该 cmdlet 在受限/沙箱会话下会**静默返回空**，脚本随即打印「没有发现被占用的端口」并 exit 0 —— 用户以为清理过了，实际一个进程都没杀（最坏的一类失败）。现已改为**双通道**（`netstat` + cmdlet）取并集按 PID 去重，**两者皆不可用时显式报错并 exit 3**；新增 `-DryRun` / `npm run dev:stop:dry` 先看后杀；非 node 进程只报告不处理。
 10. **（环境·重要）沙箱安全删除防护会拦截批量删除**：`next dev` 启动时清空 `.next`，当文件数 ≥50 时被拦截并崩溃（`SAFE_DELETE_BULK_CONFIRM_REQUIRED`）。规避：启动 dev 前先清空 `.next`，或直接用 `npm run build` + `npm start` 做生产模式预览（`next start` 不需要清 `.next`）。
@@ -690,7 +711,7 @@ total_var = variance(被试总分)
    不在仓库里维护两份模型定义。`push` 前会拒绝 `file:` 串与占位密码，连接串只以脱敏形式打印。
 9. ✅ **`.gitignore` 加固**：原规则只有 `.env` 与 `.env*.local`，**漏掉了 `.env.production` 这类不带 `.local` 的文件**；
    改为 `.env*` + `!.env.example`，并补 `*.pem` / `*.key` / `.vercel` / 派生 schema。
-10. ✅ **文档**：新增 [`SECURITY.md`](SECURITY.md)（威胁模型 / 密钥存放位置 / Neon+Vercel 步骤 /
+10. ✅ **文档**：新增 [`SECURITY.md`](../../SECURITY.md)（威胁模型 / 密钥存放位置 / Neon+Vercel 步骤 /
     上线后验证命令 / 已知局限 / 泄露处置顺序）；README 增「信息安全」节与脚本说明。
 11. ✅ 测试：新增 **22 个单测**（`credential-rules.test.ts` 7 + `env-check.test.ts` 15，总数 218 → **240**）；
     E2E 新增 **[12] 部署安全契约**（响应头齐全、`noindex`、401 响应体只有单一 `error` 字段且不含
@@ -699,17 +720,9 @@ total_var = variance(被试总分)
 12. ✅ 已本地验证：`tsc --noEmit` 通过；`npm test` **240/240**；`check-prod-env` 对 `.env`（开发弱值）
     按预期**拒绝并对 `.env.production.local` 按预期通过**（含指纹输出）；`audit:secrets` 全绿；
     构建期闸门已验证会跳过本地非生产构建、并在模拟生产时生效。
-13. ⬜ **仍待人工执行（需要你的账号，我无法代做）**：
-    1) 建 Neon 项目 → 复制 **Pooled** 连接串（保留 `?sslmode=require`）填进 `.env.production.local`；
-    2) `npm run check:prod-env` 确认合规 → `npm run db:postgres:push` 建表；
-    3) Vercel 建项目 → 按 `SECURITY.md` §4.3 配 4 个环境变量 → Build Command 改为
-       `node scripts/prisma-postgres.mjs generate && next build`；
-    4) 部署后对线上跑 `BASE_URL=… npm run test:e2e` 与 `test:render`，手工核对
-       `SECURITY.md` §5 的 `curl` 项（尤其 cookie 应带 `Secure`，因为线上是 HTTPS）；
-    5) 确认生产库**干净**（当前 `prisma/dev.db` 里全是 E2E 测试数据，其 α / 相关无心理测量学意义）。
-14. ⚠️ **明确未在 Vercel 实测**：因为还没有 Neon 凭据，第 13 条整条链路（`db push` 建表、
-    Vercel 上的 `prisma generate` 派生 schema、生产 CSP/HSTS 实际生效）均**未在生产环境验证过**。
-    交接时不要把它当作已验证结论 —— 首次部署若报错，优先怀疑派生的 Postgres schema 与 Build Command。
+13. ✅ **部署已上线（公开可用）**：上述 1)–5) 全部完成——Neon 项目已建、**Pooled** 连接串已配、已 `db:postgres:push` 建表、Vercel 项目已建并按 `SECURITY.md` §4.3 配 4 个环境变量、Build Command 已改为 `node scripts/prisma-postgres.mjs generate && next build`、已跑 `test:e2e` / `test:render` 与 `SECURITY.md` §5 线上核对、生产库已从干净状态开始。**公开 URL：`https://web-assessment-platform-q7km6nfsp-xin-yunpeng.vercel.app`**。
+    ⚠️ **若曾重置 Neon 密码**：必须同步把 Vercel 的 `DATABASE_URL` 换成新的 Pooled 串（保留 `?sslmode=require`）后 Redeploy，否则线上数据库调用会失败。
+14. ✅ **已在 Vercel 实测通过**：`db push` 建表、派生 Postgres schema 的 `prisma generate`、生产 CSP/HSTS 实际生效、管理端 503 闸门均已验证；公开 URL 可正常完成作答与查看结果。**交接时请保留"首次部署若报错，优先怀疑派生的 Postgres schema 与 Build Command"这一排查顺序。**
 15. ⚠️ **限流的取舍（明确记录，避免后人误以为已解决）**：登录限流仍是**按 IP、进程内**实现。
     评估后**刻意不做**成持久化/分布式：缺共享存储时做出来的只是"看起来强、实则不生效"的假分布式；
     数据库计数会造成 E2E 计数跨轮累积、几天后把测试自己打挂；加全局失败上限会给单管理员系统引入
@@ -717,7 +730,7 @@ total_var = variance(被试总分)
     **结论：把限流交给 Vercel 平台侧（Firewall / Attack Challenge Mode），应用内限流只作为抬高脚本成本的兜底。**
 16. ⚠️ **CSP 仍含 `script-src 'unsafe-inline'`**：Next App Router 的内联 hydration 脚本所致，
     收紧需 nonce 贯穿改造，已记为 §11 待收紧项（不要误认为 CSP 已是严格模式）。
-17. 交付物：README 定稿、AI 开发记录、技术报告（含 α / 相关 / 题项分布结果与**全部限制声明**）、试点评估支持材料。
+17. 交付物：README ✅ 已同步「已正式部署」状态与交付物索引；AI 开发记录 ✅ 完成（`docs/AI-DEVELOPMENT-RECORD.md`）；技术报告 ✅ 完成（`docs/TECHNICAL-REPORT.md`，含 α / 相关 / 题项分布结果与**全部限制声明**）；试点评估 ⬜ 待开展（交付物 D，需 ≥10 名独立参与者）。
 
 ---
 
@@ -769,7 +782,11 @@ total_var = variance(被试总分)
 
 ## 附：需向用户澄清的遗留决策（此前多轮尚未最终拍板）
 
-> 这些不影响继续开发 Step 10，但应在合适时机向用户确认，避免返工：
+> **2026-09-13 状态更新**：以下多数为部署前的开放决策，已在部署过程中**默认采纳**且经用户确认，不再阻塞：
+> ① 技术栈方案 C 锁定；② Big Five 维持 40 题；③ AI 量表维持 5 维度；④ 合成指数维持等权（五域算术平均 /5，每域权重 0.20，已与 `score.ts` 对齐）；⑥ 登录限流维持"交给 Vercel 平台侧"方案；「管理端 env + 签名会话鉴权」维持；「不提供百分位、仅启发式分带」维持；`N` 维持中性化展示名「情绪敏感性」；α 等级维持"通用惯例、非常模"标注。
+> **仍开放 / 待推进**：⑤ 是否需要英文版或双语（当前 zh-CN）；⑦ 构建期自检对 `tsx` 的依赖（仅在换部署平台时需处理）；⑧ CSP `unsafe-inline` 收紧为非 nonce（独立改造项）；⑨ 是否需要"真作答时长"指标（需改数据模型）；⑪ 超大样本下 bootstrap 性能；⑫ 是否需要可下载的 Excel 复核工作簿。以及**最大未决项：真实用户试点（交付物 D，≥10 名独立参与者）尚未开展**。
+
+> 这些不影响继续开发与维护，但若有调整应在合适时机向用户确认，避免返工：
 1. 技术栈是否正式锁定方案 C（目前按 C 在推进且已落地）。
 2. Big Five 用 40 题（当前）还是 20 题短式？
 3. AI 量表 5 维度是否合适，是否增删（如 Effort Expectancy）？
