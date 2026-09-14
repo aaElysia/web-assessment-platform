@@ -111,8 +111,8 @@ npm run deploy:check     # 上线前一键闸门：泄密扫描 + 生产自检 +
 访问 `/admin`（未登录会自动跳到 `/admin/login`）。凭据来自环境变量：
 
 ```bash
-ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="change-me-in-prod"          # 生产务必替换为强随机值
+ADMIN_USERNAME="op-88dd7c1f"
+ADMIN_PASSWORD="W$9k&6xMJ79*D%EfPQJd2gFsY@D$"
 ADMIN_SESSION_SECRET="dev-only-secret-change-me"   # 生产 ≥32 位随机值
 ```
 
